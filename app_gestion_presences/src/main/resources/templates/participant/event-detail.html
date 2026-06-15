@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Event détail</title>
+
+    <style>
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .participants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .participant-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .participant-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ddd;
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .email {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .status {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-present {
+            color: #2ecc71;
+        }
+
+        .status-late {
+            color: #f39c12;
+        }
+
+        .status-absent {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 th:text="${event.title}">Event</h1>
+
+    <div class="participant-card">
+
+        <img th:src="@{${participant.photo}}" class="avatar"/>
+
+        <h3 th:text="${participant.firstname + ' ' + participant.lastname}"></h3>
+        <p th:text="${participant.email}"></p>
+
+        <div id="participant-card" class="status"
+             th:classappend="${participant.status == 'Present'} ? 'status-present' :
+                             (${participant.status == 'Late'} ? 'status-late' : 'status-absent')">
+
+            <span th:switch="${participant.status}">
+                <span th:case="'Present'">✔ Présent</span>
+                <span th:case="'Late'">⏳ Retard</span>
+                <span th:case="'Absent'">❌ Absent</span>
+            </span>
+        </div>
+
+        <div th:if="${!event.started}">
+            <button class="btn btn-secondary" disabled>
+                Événement non démarré par l'intervenant
+            </button>
+        </div>
+
+        <div id="button" th:if="${event.started}" th:switch="${participant.status}">
+
+            <button id="checkinButton" th:case="'Absent'"
+                    class="btn btn-primary"
+                    th:onclick="'checkIn(' + ${attendanceId} + ')'">
+                Faire ma vérification
+            </button>
+
+            <button th:case="'Present'"
+                    class="btn btn-secondary"
+                    disabled>
+                Déjà enregistré
+            </button>
+
+            <button th:case="'Late'"
+                    class="btn btn-secondary"
+                    disabled>
+                Déjà enregistré
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let latitude = null;
+    let longitude = null;
+
+    function getLocation(callback) {
+
+        if (!navigator.geolocation) {
+            alert("Géolocalisation non supportée");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+
+                callback();
+            },
+            function (error) {
+                console.error(error);
+                alert("Impossible de récupérer la position");
+            }
+        );
+    }
+
+    function checkIn(attendanceId) {
+
+        getLocation(function () {
+
+            fetch(`/participant/checkin/${attendanceId}/${latitude}/${longitude}`, {
+                method: 'POST'
+            });
+
+        });
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script th:inline="javascript">
+    const eventId = [[${event.id}]];
+</script>
+
+<script th:inline="javascript">
+    const userId = [[${participant.user_id}]];
+</script>
+
+<script>
+
+
+    const socket = new SockJS('/ws');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function () {
+
+        stompClient.subscribe('/topic/event/' + eventId, function (message) {
+
+            const update = JSON.parse(message.body);
+
+            location.reload();
+
+        });
+
+        stompClient.subscribe('/topic/event/' + eventId + '/start', function(message) {
+
+            const started = JSON.parse(message.body);
+
+            if (started === true) {
+                location.reload();
+            }
+        });
+
+        stompClient.subscribe('/topic/event/' + eventId + '/start/' + userId, function(message) {
+
+            const text = message.body;
+
+            const button = document.getElementById("checkinButton");
+
+            if (button) {
+                button.innerText = text;
+                button.disabled=true;
+                setTimeout(() => {
+                    button.innerText = "Faire ma vérification";
+                    button.disabled=false;
+                }, 5000);
+            }
+
+        });
+    });
+</script>
+
+</body>
+</html>

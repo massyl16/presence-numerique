@@ -1,0 +1,33 @@
+<button onclick="getLocation()">Obtenir ma position</button>
+
+<script>
+    function getLocation() {
+        if (!navigator.geolocation) {
+            alert("Geolocation not supported.");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                console.log(latitude, longitude);
+
+                fetch('/api/location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        latitude: latitude,
+                        longitude: longitude
+                    })
+                });
+            },
+            function(error) {
+                console.error(error);
+            }
+        );
+    }
+</script>
