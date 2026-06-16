@@ -207,6 +207,20 @@
             }
         });
 
+        stompClient.subscribe('/topic/event/' + eventId + '/close', function(message) {
+
+            const started = JSON.parse(message.body);
+
+            if (started === false) {
+                const button = document.getElementById("checkinButton");
+
+                if (button) {
+                    button.innerText = "Evênement clôt";
+                    button.disabled=true;
+                }
+            }
+        });
+
         stompClient.subscribe('/topic/event/' + eventId + '/start/' + userId, function(message) {
 
             const text = message.body;

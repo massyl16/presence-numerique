@@ -30,6 +30,10 @@ public class user {
     @Enumerated(EnumType.STRING)
     private Role role;
     private String photo_path;
+    @ManyToOne
+    private promotion promotion;
+    @ManyToOne
+    private group group;
 
     //Getters et setters
 
@@ -51,6 +55,14 @@ public class user {
 
     private void setPhoto(String photo_path) {
         this.photo_path=photo_path;
+    }
+
+    private void setPromotion(promotion promotion){
+        this.promotion=promotion;
+    }
+
+    private void setGroup(group group){
+        this.group=group;
     }
 
     public Long getId() {
@@ -77,6 +89,14 @@ public class user {
         return this.photo_path;
     }
 
+    public promotion getPromotion(){
+        return this.promotion;
+    }
+
+    public group getGroup(){
+        return this.group;
+    }
+
     //temporaire pour le DataInitializer
 
     @PrePersist
@@ -87,13 +107,15 @@ public class user {
 
     //Constructeurs
 
-    public user(String firstname,String lastname, String email) {
+    public user(String firstname,String lastname, String email, promotion promotion, group group) {
         setFirstname(firstname);
         setLastname(lastname);
         setEmail(email);
         setRole(Role.Participant);
         String fileName = "user_" + email + ".jpg";
         setPhoto("/uploads/photos/" + fileName);
+        setPromotion(promotion);
+        setGroup(group);
     }
 
     public user(String firstname,String lastname, String email, Role role) {

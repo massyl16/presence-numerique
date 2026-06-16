@@ -21,8 +21,6 @@ public class attendance {
     @ManyToOne
     private event event;
     private LocalDateTime validationTime;
-    private Double latitude;
-    private Double longitude;
     @Enumerated(EnumType.STRING)
     private AttendanceStatus status;
 
@@ -37,11 +35,6 @@ public class attendance {
     }
     private void setValidationTime(LocalDateTime validationTime){
         this.validationTime=validationTime;
-    }
-
-    private void setLatitudeLongitude(Double latitude, Double longitude){
-        this.latitude=latitude;
-        this.longitude=longitude;
     }
 
     private void setStatus(AttendanceStatus status){
@@ -86,15 +79,12 @@ public class attendance {
     public String verification(Double latitude, Double longitude){
         if(event.getStarted()){
             setValidationTime(LocalDateTime.now());
-            setLatitudeLongitude(latitude,longitude);
 
-            if (Math.sqrt(Math.pow(event.getLatitude()-latitude,2)+Math.pow(event.getLongitude()-longitude,2))<=event.getAllowedRadiusMeters()){
-                if(validationTime.isAfter(event.getStartTime()) & validationTime.isBefore(event.getLateTime())){
+            if (Math.sqrt(Math.pow(event.getLatitude()-latitude,2)+Math.pow(event.getLongitude()-longitude,2))<=0.00040){
+                if(validationTime.isAfter(event.getStartTime()) & validationTime.isBefore(event.getStartTime().plusMinutes(5))){
                     setStatus(AttendanceStatus.Present);
-                } else if (validationTime.isAfter(event.getStartTime()) & validationTime.isAfter(event.getLateTime())) {
+                } else if (validationTime.isAfter(event.getStartTime()) & validationTime.isAfter(event.getStartTime().plusMinutes(5))) {
                     setStatus(AttendanceStatus.Late);
-                } else if (validationTime.isAfter(event.getEndTime())) {
-                    setStatus(AttendanceStatus.Absent);
                 }
                 else {
                     return "L'évênement a été démarré par l'intervenant mais vous devez patienter jusqu'à l'heure de début réel de l'évênement";

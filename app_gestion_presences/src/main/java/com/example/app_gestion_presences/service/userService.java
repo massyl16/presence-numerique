@@ -1,6 +1,8 @@
 package com.example.app_gestion_presences.service;
 
 
+import com.example.app_gestion_presences.entity.group;
+import com.example.app_gestion_presences.entity.promotion;
 import com.example.app_gestion_presences.entity.user;
 import com.example.app_gestion_presences.entity.Role;
 import com.example.app_gestion_presences.repository.userRepository;
@@ -22,9 +24,9 @@ public class userService {
         this.user_repository = user_repository;
     }
 
-    public void createUserParticipant(String firstname, String lastname, String email, MultipartFile photo) {
+    public void createUserParticipant(String firstname, String lastname, String email, promotion promotion, group group) {
 
-          user user = new user(firstname, lastname, email);
+          user user = new user(firstname, lastname, email, promotion, group);
           //upload_photo(user, photo);
           user_repository.save(user);
     }

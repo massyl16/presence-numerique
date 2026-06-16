@@ -14,7 +14,7 @@ public interface eventRepository extends JpaRepository<event, Long> {
     event findByTitle(String title);
 
     //Trouve tout les évênements associés à un secrétaire
-    List<event> findAllBySecretary(user secretary);
+    //List<event> findAllBySecretary(user secretary);
     //Trouve tout les évênements associés à un intervenant
     List<event> findAllBySpeaker(user speaker);
 }

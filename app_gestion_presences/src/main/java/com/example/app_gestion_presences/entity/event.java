@@ -19,32 +19,23 @@ public class event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
-    private String date;
-    private String place;
     private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    private LocalDateTime lateTime;
     private Double latitude;
     private Double longitude;
-    private Double allowedRadiusMeters;
     private boolean started;
     @ManyToOne
-    private user secretary;
-    @ManyToOne
     private user speaker;
+
+    @ManyToOne
+    private promotion promotion;
+
+    @ManyToOne
+    private group group;
 
     //Setters et getters
 
     private void setTitle(String title) {
         this.title=title;
-    }
-
-    private void setDate(String date) {
-        this.date=date;
-    }
-
-    private void setPlace(String place){
-        this.place=place;
     }
 
     private void setLatitude(Double latitude){
@@ -59,15 +50,7 @@ public class event {
         this.startTime=time;
     }
 
-    private void setEndTime(LocalDateTime time){
-        this.endTime=time;
-    }
-
-    private void setLateTime(LocalDateTime time){
-        this.lateTime=time;
-    }
-
-    public void setStarted(boolean b){
+    private void setStarted(boolean b){
         this.started=b;
     }
 
@@ -75,12 +58,12 @@ public class event {
         this.speaker=speaker;
     }
 
-    private void setSecretary(user secretary) {
-        this.secretary=secretary;
+    private void setPromotion(promotion promotion){
+        this.promotion=promotion;
     }
 
-    private void setAllowedRadiusMeters(Double radius){
-        this.allowedRadiusMeters=radius;
+    private void setGroup(group group){
+        this.group=group;
     }
 
     public Long getId(){
@@ -91,27 +74,12 @@ public class event {
         return this.title;
     }
 
-    public String getDate(){
-        return this.date;
-    }
-
-    public String getPlace(){
-        return this.place;
-    }
     public boolean getStarted() {
         return this.started;
     }
 
     public LocalDateTime getStartTime() {
         return this.startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return this.endTime;
-    }
-
-    public LocalDateTime getLateTime() {
-        return this.lateTime;
     }
 
     public Double getLatitude(){
@@ -122,27 +90,31 @@ public class event {
         return this.longitude;
     }
 
-    public Double getAllowedRadiusMeters(){
-        return this.allowedRadiusMeters;
-    }
-
     //Constructeurs
 
-    public event(String title, String date, String place, Double latitude, Double longitude, Double allowedRadiusMeters, LocalDateTime startTime, LocalDateTime endTime, LocalDateTime lateTime , user[] participant_list,user speaker, user secretary) {
+    public event(String title, Double latitude, Double longitude, LocalDateTime startTime,user speaker, promotion promotion, group group) {
         setTitle(title);
-        setDate(date);
-        setPlace(place);
         setLatitude(latitude);
         setLongitude(longitude);
-        setLateTime(lateTime);
         setStartTime(startTime);
-        setEndTime(endTime);
-        setAllowedRadiusMeters(allowedRadiusMeters);
         setSpeaker(speaker);
-        setSecretary(secretary);
-        this.started=false;
+        setPromotion(promotion);
+        setGroup(group);
+        setStarted(false);
     }
 
     public event(){}
 
+    //Méthode pour démarrer l'évênement par un intervenant
+    public void start(user user){
+        if(user.getRole()== Role.Speaker){
+            setStarted(true);
+        }
+    }
+
+    public void close(user user) {
+        if(user.getRole()== Role.Speaker){
+            setStarted(false);
+        }
+    }
 }

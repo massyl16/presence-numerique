@@ -7,5 +7,7 @@ public record Participant(
         String lastname,
         String email,
         String photo,
+        String promotion,
+        String group,
         String status
 ) { }

@@ -2,13 +2,9 @@ package com.example.app_gestion_presences.controller;
 
 import com.example.app_gestion_presences.AttendanceUpdate;
 import com.example.app_gestion_presences.entity.*;
-import com.example.app_gestion_presences.service.AttendancePushService;
-import com.example.app_gestion_presences.service.attendanceService;
-import com.example.app_gestion_presences.service.eventService;
+import com.example.app_gestion_presences.repository.*;
+import com.example.app_gestion_presences.service.*;
 
-import com.example.app_gestion_presences.repository.userRepository;
-import com.example.app_gestion_presences.repository.eventRepository;
-import com.example.app_gestion_presences.repository.attendanceRepository;
 import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,6 +26,8 @@ public class EventController {
 
     private final attendanceService attendanceService;
 
+    private final userService userService;
+
     private final userRepository userRepository;
 
     private final eventRepository eventRepository;
@@ -38,13 +36,26 @@ public class EventController {
 
     private final AttendancePushService attendancePushService;
 
-    public EventController(eventService eventService, attendanceService attendanceService, userRepository userRepository, eventRepository eventRepository, attendanceRepository attendanceRepository,AttendancePushService attendancePushService) {
+    private final promotionRepository promotionRepository;
+
+    private final groupRepository groupRepository;
+
+    private final promotionService promotionService;
+
+    private final groupService groupService;
+
+    public EventController(eventService eventService, attendanceService attendanceService, userRepository userRepository, userService userService ,eventRepository eventRepository, attendanceRepository attendanceRepository,AttendancePushService attendancePushService, promotionRepository promotionRepository, groupRepository groupRepository, promotionService promotionService, groupService groupService) {
         this.eventService = eventService;
         this.attendanceService = attendanceService;
         this.userRepository=userRepository;
+        this.userService=userService;
         this.eventRepository=eventRepository;
         this.attendanceRepository=attendanceRepository;
         this.attendancePushService = attendancePushService;
+        this.promotionRepository=promotionRepository;
+        this.groupRepository=groupRepository;
+        this.promotionService=promotionService;
+        this.groupService=groupService;
     }
 
     @GetMapping("speaker/events")
@@ -76,6 +87,7 @@ public class EventController {
                 .toList();*/
     @GetMapping("/speaker/events/{eventId}")
     public String speakerGetEventDetail(@PathVariable Long eventId, Model model) {
+        user connected_user = userRepository.findByEmailAndRole("cd@test.com",Role.Speaker);
 
         List<attendance> attendances = attendanceRepository.findAllByEventId(eventId);
 
@@ -89,6 +101,8 @@ public class EventController {
                             u.getLastname(),
                             u.getEmail(),
                             u.getPhoto(),
+                            u.getPromotion().getName(),
+                            u.getGroup().getName(),
                             a.getStatus().name()
                     );
                 })
@@ -97,12 +111,29 @@ public class EventController {
         model.addAttribute("event", eventRepository.findById(eventId).orElseThrow());
         model.addAttribute("participants", participants);
 
-        attendances.getFirst().getEvent().setStarted(true);
-        eventRepository.save(attendances.getFirst().getEvent());
+        event event = eventRepository.getReferenceById(eventId);
+        event.start(connected_user);
+        eventRepository.save(event);
 
-        attendancePushService.sendUpdateStarted(attendances.getFirst());
+        attendancePushService.sendUpdateStarted(event);
 
         return "speaker/event-detail";
+    }
+
+    @GetMapping("/speaker/events/close/{eventId}")
+    public String speakerGetEventClose(@PathVariable Long eventId, Model model) {
+        user connected_user = userRepository.findByEmailAndRole("cd@test.com",Role.Speaker);
+
+        event event = eventRepository.getReferenceById(eventId);
+
+        event.close(connected_user);
+        eventRepository.save(event);
+
+        attendancePushService.sendUpdateClosed(event);
+
+        //envoyer au secretariat
+
+        return "redirect:/speaker/events";
     }
 
     @GetMapping("participant/events")
@@ -153,6 +184,8 @@ public class EventController {
                 participant.getLastname(),
                 participant.getEmail(),
                 participant.getPhoto(),
+                participant.getPromotion().getName(),
+                participant.getGroup().getName(),
                 attendance.getStatus().name()
         );
 
@@ -182,77 +215,159 @@ public class EventController {
             attendancePushService.sendUpdateResponse(a,text);
         }
     }
+    @GetMapping("/speaker/events/new")
+    public String getPromotion(Model model) {
+
+        List<promotion> promotions = promotionService.getAllPromotions();
+        model.addAttribute("promotions",promotions);
+
+        return "speaker/create-event";
+    }
+
+    @PostMapping("/speaker/events/new/select")
+    public String speakerGetInfos(Model model, @RequestParam Long promotionId) {
+
+        promotion promotion = promotionRepository.getReferenceById(promotionId);
+        List<group> groups = groupService.getAllGroups(promotion);
+        model.addAttribute("promotion",promotion);
+        model.addAttribute("groups",groups);
+
+        return "speaker/create-event-bis";
+    }
+
+    @PostMapping("/speaker/events/new/select/create")
+    public String createEvent(
+            @RequestParam String title,
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam Long promotionId,
+            @RequestParam Long groupId
+
+    ) {
+
+
+        user connected_user = userRepository.findByEmailAndRole("cd@test.com",Role.Speaker);
+
+        eventService.createEvent(
+                title,
+                LocalDateTime.now(),
+                latitude,
+                longitude,
+                userRepository.getReferenceById(connected_user.getId()),
+                promotionRepository.getReferenceById(promotionId),
+                groupRepository.getReferenceById(groupId)
+        );
+
+        return "redirect:/speaker/events";
+    }
 
     @GetMapping("/secretary/events")
     public String secretaryEvents(Model model) {
         user connected_user = userRepository.findByEmailAndRole("ab@test.com",Role.Secretary);
-        if(connected_user.getRole()==Role.Participant){
-            model.addAttribute(
-                    "events",
-                    attendanceService.getAllEvents(connected_user));
-        }
-        else{
-            model.addAttribute(
-                    "events",
-                    eventService.getAllEvents(connected_user));
-        }
+        model.addAttribute(
+                "events",
+                eventService.getAllEvents(connected_user));
         return "secretary/events";
     }
-    @GetMapping("/secretary/events/new")
-    public String newEvent(Model model) {
-        user connected_user = userRepository.findByEmailAndRole("ab@test.com",Role.Secretary);
 
-        List<user> speakers = userRepository.findAllByRole(Role.Speaker);
-        model.addAttribute("speakers",speakers);
-
-        List<user> participants = userRepository.findAllByRole(Role.Participant);
-        model.addAttribute("participants",participants);
-
-        return "secretary/create-event";
+    @GetMapping("/secretary/group_gestion")
+    public String secretaryGestion(Model model){
+        return "secretary/group_gestion";
     }
 
-    @PostMapping("/secretary/events/new/create")
-    public String createEvent(
-            @RequestParam String title,
-            @RequestParam String location,
-            @RequestParam LocalDateTime startTime,
-            @RequestParam LocalDateTime endTime,
-            @RequestParam int lateTime,
-            @RequestParam Double latitude,
-            @RequestParam Double longitude,
-            @RequestParam Double radius,
-            @RequestParam Long[] participant_list,
-            @RequestParam Long speakerId
+    @GetMapping("/secretary/group_gestion/promotion")
+    public String secretaryGestionPromotion(Model model){
+        return "secretary/group_gestion_promotion";
+    }
 
-    ) {
-        user[] participant_list_ids = new user[participant_list.length];
-        for (int i = 0; i < participant_list.length; i++) {
-            participant_list_ids[i]=userRepository.getReferenceById(participant_list[i]);
+    @PostMapping("/secretary/group_gestion/promotion/create")
+    public String createPromotion(@RequestParam String name){
+        //check si existe déjà
+        List<promotion> promotions = promotionService.getAllPromotions();
+        for (int i = 0; i < promotions.size(); i++) {
+            if (Objects.equals(promotions.get(i).getName(), name)){
+                //dire already exist à l'utilisateur
+                return "redirect:/secretary/group_gestion/promotion";
+            }
         }
+        promotionService.createPromotion(name);
+        return "redirect:/secretary/group_gestion";
+    }
 
-        user connected_user = userRepository.findByEmailAndRole("ab@test.com",Role.Secretary);
+    @GetMapping("/secretary/group_gestion/group")
+    public String secretaryGestionGroup(Model model){
 
-        LocalDateTime tmp_lateTime = startTime.plusMinutes(lateTime);
+        List<promotion> promotions = promotionService.getAllPromotions();
+        model.addAttribute("promotions",promotions);
 
-        if (tmp_lateTime.isAfter(endTime)){
-            tmp_lateTime = startTime.plusMinutes(15);
+        return "secretary/group_gestion_group";
+    }
+
+    @PostMapping("/secretary/group_gestion/group/select")
+    public String secretaryGetInfos(Model model,@RequestParam Long promotionId){
+
+        promotion promotion = promotionRepository.getReferenceById(promotionId);
+        List<group> groups = groupService.getAllGroups(promotion);
+        model.addAttribute("promotion",promotion);
+        model.addAttribute("groups",groups);
+
+        return "secretary/group_gestion_group_select";
+    }
+
+    @PostMapping("/secretary/group_gestion/group/select/create")
+    public String createGroup(Model model,@RequestParam Long promotionId,@RequestParam String name){
+        //check si existe déjà
+        promotion promotion = promotionRepository.getReferenceById(promotionId);
+        List<group> groups = groupService.getAllGroups(promotion);
+        for (int i = 0; i < groups.size(); i++) {
+            if (Objects.equals(groups.get(i).getName(), name)){
+                //dire already exist à l'utilisateur
+                return "redirect:/secretary/group_gestion/group/select";
+            }
         }
+        groupService.createGroup(name,promotion);
+        return "redirect:/secretary/group_gestion";
+    }
 
-        eventService.createEvent(
-                title,
-                startTime.toLocalDate().toString(),
-                location,
-                startTime,
-                endTime,
-                tmp_lateTime,
-                latitude,
-                longitude,
-                radius,
-                participant_list_ids,
-                userRepository.getReferenceById(speakerId),
-                userRepository.getReferenceById(connected_user.getId())
-        );
+    @GetMapping("/secretary/group_gestion/participant")
+    public String secretaryGestionParticipant(Model model){
 
-        return "redirect:/secretary/events";
+        List<promotion> promotions = promotionService.getAllPromotions();
+        model.addAttribute("promotions",promotions);
+
+        return "secretary/group_gestion_participant";
+    }
+
+    @PostMapping("/secretary/group_gestion/participant/select")
+    public String secretaryGetInfosParticipant(Model model,@RequestParam Long promotionId){
+
+        promotion promotion = promotionRepository.getReferenceById(promotionId);
+        List<group> groups = groupService.getAllGroups(promotion);
+        model.addAttribute("promotion",promotion);
+        model.addAttribute("groups",groups);
+
+        return "secretary/group_gestion_participant_select";
+    }
+
+    @PostMapping("/secretary/group_gestion/participant/select/create")
+    public String createParticipant(Model model,
+                                    @RequestParam String firstname,
+                                    @RequestParam String lastname,
+                                    @RequestParam String email,
+                                    @RequestParam Long promotionId,
+                                    @RequestParam Long groupId
+                                    ){
+        //check si existe déjà
+        promotion promotion = promotionRepository.getReferenceById(promotionId);
+        group group = groupRepository.getReferenceById(groupId);
+        List<user> users = userRepository.findByEmailAndPromotion(email,promotion);
+        for (int i = 0; i < users.size(); i++) {
+            if (Objects.equals(users.get(i).getEmail(), email)){
+                //dire already exist à l'utilisateur
+                return "redirect:/secretary/group_gestion/participant";
+            }
+        }
+        userService.createUserParticipant(firstname,lastname,email,promotion,group);
+        return "redirect:/secretary/group_gestion";
     }
 }

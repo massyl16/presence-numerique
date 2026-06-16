@@ -1,6 +1,8 @@
 package com.example.app_gestion_presences.repository;
 
 import com.example.app_gestion_presences.entity.Role;
+import com.example.app_gestion_presences.entity.group;
+import com.example.app_gestion_presences.entity.promotion;
 import com.example.app_gestion_presences.entity.user;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -15,4 +17,10 @@ public interface userRepository extends JpaRepository<user, Long> {
 
     //Trouve tout les utilisateurs ayant un certain rôle
     List<user> findAllByRole(Role role);
+
+    //Trouve tous les utilisateurs d'un groupe d'une promotion;
+
+    List<user> findAllByPromotionAndGroup(promotion promotion, group group);
+
+    List<user> findByEmailAndPromotion(String email, promotion promotion);
 }

@@ -78,6 +78,26 @@
         .status-absent {
             color: #e74c3c;
         }
+
+        .details-btn {
+            display: inline-block;
+
+            margin-top: 20px;
+            padding: 10px 18px;
+
+            border-radius: 10px;
+
+            text-decoration: none;
+
+            background: #2563eb;
+            color: white;
+
+            font-weight: 600;
+            }
+
+            .details-btn:hover {
+            background: #1d4ed8;
+        }
     </style>
 </head>
 <body>
@@ -116,6 +136,10 @@
         </div>
 
     </div>
+    <a th:href="@{/speaker/events/close/{id}(id=${event.id})}"
+       class="details-btn">
+        Clôre l'évênement
+    </a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>

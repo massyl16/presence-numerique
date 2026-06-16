@@ -30,6 +30,7 @@ public class attendanceService {
         attendance_repository.save(attendance);
     }
 
+    //getAllEvents pour les participants
     public event[] getAllEvents(user user) {
         List<attendance> attendances=attendance_repository.findAllByUser(user);
         event[] events = new event[attendances.size()];

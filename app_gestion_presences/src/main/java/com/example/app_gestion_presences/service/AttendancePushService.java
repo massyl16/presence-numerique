@@ -1,6 +1,7 @@
 package com.example.app_gestion_presences.service;
 
 import com.example.app_gestion_presences.AttendanceUpdate;
+import com.example.app_gestion_presences.entity.event;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -32,11 +33,20 @@ public class AttendancePushService {
 
     }
 
-    public void sendUpdateStarted(attendance attendance) {
+    public void sendUpdateStarted(event event) {
 
         messagingTemplate.convertAndSend(
-                "/topic/event/" + attendance.getEvent().getId() + "/start",
+                "/topic/event/" + event.getId() + "/start",
                 true
+        );
+
+    }
+
+    public void sendUpdateClosed(event event) {
+
+        messagingTemplate.convertAndSend(
+                "/topic/event/" + event.getId() + "/close",
+                false
         );
 
     }

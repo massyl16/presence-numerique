@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Gestion des groupes</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .btn {
+            display: block;
+            margin: 15px 0;
+            padding: 15px;
+            background: #0d6efd;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Gestion des promotions, groupes et participants</h1>
+
+    <a class="btn" th:href="@{/secretary/group_gestion/promotion}">
+        Gérer les promotions
+    </a>
+
+    <a class="btn" th:href="@{/secretary/group_gestion/group}">
+        Gérer les groupes
+    </a>
+
+    <a class="btn" th:href="@{/secretary/group_gestion/participant}">
+        Ajouter un participant
+    </a>
+</div>
+
+</body>
+</html>

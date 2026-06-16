@@ -11,8 +11,4 @@ public class HomeController {
         return "home";
     }
 
-    @GetMapping("/secretary")
-    public String secretary() {
-        return "secretary";
-    }
 }

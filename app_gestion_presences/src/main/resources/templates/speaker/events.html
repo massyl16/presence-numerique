@@ -93,11 +93,6 @@
             <h3 th:text="${event.title}">Nom événement</h3>
         </div>
 
-        <div class="event-info">
-            <p><span th:text="${event.date}"></span></p>
-            <p><span th:text="${event.place}"></span></p>
-        </div>
-
         <a th:href="@{/speaker/events/{id}(id=${event.id})}"
            class="details-btn">
             Démarrer l'évênement
@@ -106,6 +101,11 @@
     </div>
 
 </div>
+
+<a th:href="@{/speaker/events/new}"
+   class="details-btn">
+    Créer un évênement
+</a>
 
 </body>
 </html>
