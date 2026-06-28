@@ -1,0 +1,15 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Maven build
+app_gestion_presences/target/
+
+# Secrets / config locaux
+*.env
+.env
+
+# OS
+.DS_Store
+Thumbs.db

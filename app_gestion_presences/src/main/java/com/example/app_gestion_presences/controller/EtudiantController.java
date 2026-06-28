@@ -42,10 +42,19 @@ public class EtudiantController {
         User etudiant = getCurrentUser(ud);
         model.addAttribute("etudiant", etudiant);
 
-        // Cherche une séance active pour la promotion de l'étudiant
+        // Cherche une séance active pour la promotion ET le groupe de l'étudiant
         if (etudiant.getPromotion() != null) {
             Optional<Event> seanceActive = eventRepository.findActiveByPromotion(etudiant.getPromotion());
-            seanceActive.ifPresent(e -> model.addAttribute("seanceActive", e));
+            seanceActive.ifPresent(e -> {
+                // N'affiche le bouton que si la séance concerne bien ce groupe
+                boolean concerneEtudiant = e.getGroup() == null
+                        || e.getGroup().getName().equals("Complet")
+                        || (etudiant.getGroup() != null
+                            && e.getGroup().getId().equals(etudiant.getGroup().getId()));
+                if (concerneEtudiant) {
+                    model.addAttribute("seanceActive", e);
+                }
+            });
         }
         return "etudiant/accueil";
     }

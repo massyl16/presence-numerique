@@ -32,7 +32,7 @@
             <p th:text="${seance.startTime != null ? #temporals.format(seance.startTime, 'dd/MM/yyyy à HH:mm') + ' — ' + seance.enseignant.firstname + ' ' + seance.enseignant.lastname : '—'}"></p>
         </div>
         <div style="display:flex;gap:10px">
-            <a th:href="@{/secretariat/feuilles/{id}/csv(id=${seance.id})}" class="btn secondary">⬇ CSV</a>
+            <a th:href="@{/secretariat/feuilles/{id}/csv(id=${seance.id})}" class="btn secondary">⬇ Excel</a>
             <a th:href="@{/secretariat/feuilles}" class="btn" style="background:#EEF1F6;color:#15233F">← Retour</a>
         </div>
     </div>
