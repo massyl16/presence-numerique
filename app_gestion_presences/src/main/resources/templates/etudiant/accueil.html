@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil — Présence Numérique</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item active" th:href="@{/etudiant/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item" th:href="@{/etudiant/presences}"><span class="ico">📋</span> Mes présences</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${etudiant.firstname + ' ' + etudiant.lastname}">Étudiant</div>
+        <div class="e" th:text="${etudiant.promotion != null ? etudiant.promotion.name : 'ETUDIANT'}"></div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1>Bonjour, <span th:text="${etudiant.firstname}">Étudiant</span> 👋</h1>
+            <p>Validez votre présence en temps réel.</p>
+        </div>
+    </div>
+
+    <!-- ═══ ÉTAT A : Aucun appel en cours ════════════════════════════════════ -->
+    <div th:if="${seanceActive == null}" id="state-no-call">
+        <div class="no-call-card">
+            <div class="nc-title">Aucun appel en cours</div>
+            <div class="nc-desc">
+                Vous serez automatiquement notifié dès qu'un enseignant<br>
+                lancera un appel pour votre promotion.
+            </div>
+        </div>
+        <div style="text-align:center;margin-top:24px;color:#B6C0D2;font-size:40px">⏳</div>
+        <p style="text-align:center;color:#8A95AC;font-size:13px;margin-top:12px">
+            En attente d'un appel…
+        </p>
+    </div>
+
+    <!-- ═══ ÉTAT B : Appel en cours ══════════════════════════════════════════ -->
+    <div th:if="${seanceActive != null}" id="state-call">
+        <div class="session-card">
+            <div class="sc-promo"
+                 th:text="${seanceActive.promotion.name + (seanceActive.group != null ? ' · ' + seanceActive.group.name : '')}">
+            </div>
+            <div class="sc-detail"
+                 th:text="${'Démarré à ' + #temporals.format(seanceActive.startTime, 'HH:mm')}">
+            </div>
+        </div>
+
+        <!-- Bouton Présent -->
+        <div id="checkin-area">
+            <button class="present-btn" id="btn-present" onclick="doCheckin()">
+                <span class="icon">✋</span>
+                <span class="t">Je suis présent</span>
+                <span class="sub">Cliquez pour valider votre présence</span>
+            </button>
+            <p class="rgpd-note">📍 Votre position GPS est vérifiée instantanément et n'est jamais enregistrée.</p>
+            <div class="error-msg" id="err-msg"></div>
+        </div>
+
+        <!-- Confirmation -->
+        <div id="confirmed-area" style="display:none;text-align:center;padding:30px 0">
+            <div class="check-circle">✓</div>
+            <div style="font-size:18px;font-weight:700;color:#15233F;margin-bottom:6px" id="confirmed-label">Présence validée !</div>
+            <div style="font-size:13px;color:#67748C">Votre présence a bien été enregistrée.</div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/sockjs-client/1.5.1/sockjs.min.js}"></script>
+<script th:src="@{/webjars/stomp-websocket/2.3.4/stomp.min.js}"></script>
+<script th:inline="javascript">
+    const promoId    = /*[[${etudiant.promotion != null ? etudiant.promotion.id : 0}]]*/ 0;
+    const hasCall    = /*[[${seanceActive != null}]]*/ false;
+
+    // WebSocket : écoute /topic/promo/{promoId} pour démarrage/clôture
+    const client = Stomp.over(new SockJS('/ws'));
+    client.debug = null;
+    client.connect({}, () => {
+        // Notif démarrage appel
+        client.subscribe('/topic/promo/' + promoId, msg => {
+            window.location.reload();
+        });
+        // Notif clôture
+        client.subscribe('/topic/promo/' + promoId + '/close', () => {
+            window.location.reload();
+        });
+    });
+
+    function doCheckin() {
+        const btn = document.getElementById('btn-present');
+        const err = document.getElementById('err-msg');
+        btn.disabled = true;
+        err.textContent = '';
+
+        if (!navigator.geolocation) {
+            err.textContent = 'La géolocalisation n\'est pas disponible sur ce navigateur.';
+            btn.disabled = false;
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                if (pos.coords.accuracy > 100) {
+                    err.textContent = 'Précision GPS insuffisante (' + Math.round(pos.coords.accuracy) + ' m). Déplacez-vous en espace ouvert et réessayez.';
+                    btn.disabled = false;
+                    return;
+                }
+                fetch('/etudiant/checkin?latitude=' + pos.coords.latitude + '&longitude=' + pos.coords.longitude, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(r => r.text()).then(body => {
+                    if (body === 'Ok') {
+                        document.getElementById('checkin-area').style.display = 'none';
+                        document.getElementById('confirmed-area').style.display = 'block';
+                    } else {
+                        err.textContent = body;
+                        btn.disabled = false;
+                    }
+                });
+            },
+            e => {
+                err.textContent = 'Impossible d\'obtenir votre position GPS. Activez la localisation.';
+                btn.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }
+</script>
+</body>
+</html>

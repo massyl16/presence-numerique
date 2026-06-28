@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Détail séance — Présence Numérique</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" th:href="@{/enseignant/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item" th:href="@{/enseignant/appel}"><span class="ico">📋</span> Faire l'appel</a>
+    <a class="nav-item active" th:href="@{/enseignant/historique}"><span class="ico">📊</span> Historique</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${enseignant.firstname + ' ' + enseignant.lastname}">Enseignant</div>
+        <div class="e">ENSEIGNANT</div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1 th:text="${(seance.title != null ? seance.title + ' — ' : '') + seance.promotion.name + (seance.group != null ? ' · ' + seance.group.name : '')}">Séance</h1>
+            <p th:text="${seance.startTime != null ? #temporals.format(seance.startTime, 'dd/MM/yyyy à HH:mm') : '—'}"></p>
+        </div>
+        <div style="display:flex;gap:10px">
+            <a th:href="@{/enseignant/historique/{id}/csv(id=${seance.id})}" class="btn secondary">⬇ CSV</a>
+            <a th:href="@{/enseignant/historique}" class="btn" style="background:#EEF1F6;color:#15233F">← Retour</a>
+        </div>
+    </div>
+
+    <!-- Compteurs -->
+    <div class="counters" style="margin-bottom:24px">
+        <div class="counter green">
+            <div class="dot"></div>
+            <div>
+                <div class="n" th:text="${nbPresent}">0</div>
+                <div class="l">Présents</div>
+            </div>
+        </div>
+        <div class="counter orange">
+            <div class="dot"></div>
+            <div>
+                <div class="n" th:text="${nbRetard}">0</div>
+                <div class="l">Retards</div>
+            </div>
+        </div>
+        <div class="counter gray">
+            <div class="dot"></div>
+            <div>
+                <div class="n" th:text="${nbAbsent}">0</div>
+                <div class="l">Absents</div>
+            </div>
+        </div>
+        <div class="counter" style="background:#F0FFF8;border-color:#2ED47A22">
+            <div class="dot" style="background:#2ED47A"></div>
+            <div>
+                <div class="n" th:text="${taux + '%'}">0%</div>
+                <div class="l">Taux présence</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste nominative -->
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Étudiant</th>
+                        <th>Groupe</th>
+                        <th>Statut</th>
+                        <th>Heure de validation</th>
+                        <th>Retard</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(attendances)}">
+                        <td colspan="5" style="text-align:center;color:#67748C;padding:30px">Aucun étudiant.</td>
+                    </tr>
+                    <tr th:each="att : ${attendances}">
+                        <td th:text="${att.user.firstname + ' ' + att.user.lastname}">—</td>
+                        <td th:text="${att.user.group != null ? att.user.group.name : '—'}">—</td>
+                        <td>
+                            <span th:class="${att.status.name() == 'Present' ? 'badge present' : (att.status.name() == 'Late' ? 'badge retard' : 'badge absent')}"
+                                  th:text="${att.status.name() == 'Present' ? 'Présent' : (att.status.name() == 'Late' ? 'Retard' : 'Absent')}">
+                            </span>
+                        </td>
+                        <td th:text="${att.validationTime != null ? #temporals.format(att.validationTime, 'HH:mm:ss') : '—'}">—</td>
+                        <td th:text="${att.lateMinutes > 0 ? att.lateMinutes + ' min' : '—'}">—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

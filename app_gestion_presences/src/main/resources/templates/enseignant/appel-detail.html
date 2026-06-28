@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Appel en cours — Présence Numérique</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" th:href="@{/enseignant/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item active" th:href="@{/enseignant/appel}"><span class="ico">📋</span> Faire l'appel</a>
+    <a class="nav-item" th:href="@{/enseignant/historique}"><span class="ico">📊</span> Historique</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${enseignant.firstname + ' ' + enseignant.lastname}">Enseignant</div>
+        <div class="e">ENSEIGNANT</div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1 th:text="${(seance.title != null ? seance.title + ' — ' : '') + seance.promotion.name + (seance.group != null ? ' · ' + seance.group.name : '')}">Appel</h1>
+            <p th:text="${'Démarré à ' + (seance.startTime != null ? #temporals.format(seance.startTime, 'HH:mm') : '...')}"></p>
+        </div>
+        <form th:action="@{/enseignant/appel/close/{id}(id=${seance.id})}" method="post">
+            <button type="submit" class="btn danger">Clôturer l'appel</button>
+        </form>
+    </div>
+
+    <!-- Compteurs -->
+    <div class="counters">
+        <div class="counter green">
+            <div class="dot"></div>
+            <div>
+                <div class="n" id="cnt-present" th:text="${nbPresent}">0</div>
+                <div class="l">Présents</div>
+            </div>
+        </div>
+        <div class="counter orange">
+            <div class="dot"></div>
+            <div>
+                <div class="n" id="cnt-late" th:text="${nbRetard}">0</div>
+                <div class="l">Retards</div>
+            </div>
+        </div>
+        <div class="counter gray">
+            <div class="dot"></div>
+            <div>
+                <div class="n" id="cnt-absent" th:text="${nbAbsent}">0</div>
+                <div class="l">Absents</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtre -->
+    <div class="toolbar-top">
+        <select class="filter" id="filter-status" onchange="filterCards()">
+            <option value="all">Tous les étudiants</option>
+            <option value="present">Présents</option>
+            <option value="retard">Retards</option>
+            <option value="absent">Absents</option>
+        </select>
+        <span style="font-size:12px;color:#67748C"
+              th:text="${#lists.size(attendances)} + ' étudiants'"></span>
+    </div>
+
+    <!-- Trombinoscope -->
+    <div class="card">
+        <div class="trombi" id="trombi-grid">
+            <div th:each="att : ${attendances}"
+                 th:id="${'stu-' + att.user.id}"
+                 th:class="${'stu ' + (att.status.name() == 'Present' ? 'present' : (att.status.name() == 'Late' ? 'retard' : 'absent'))}">
+                <div class="ph"
+                     th:text="${att.user.firstname.substring(0,1).toUpperCase() + att.user.lastname.substring(0,1).toUpperCase()}">AB</div>
+                <div class="nm" th:text="${att.user.firstname + ' ' + att.user.lastname}">Nom</div>
+                <div class="st"
+                     th:text="${att.status.name() == 'Present' ? '✓ Présent' : (att.status.name() == 'Late' ? '⏱ Retard' : '— Absent')}"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/sockjs-client/1.5.1/sockjs.min.js}"></script>
+<script th:src="@{/webjars/stomp-websocket/2.3.4/stomp.min.js}"></script>
+<script th:inline="javascript">
+    const seanceId = /*[[${seance.id}]]*/ 0;
+
+    const client = Stomp.over(new SockJS('/ws'));
+    client.debug = null;
+    client.connect({}, () => {
+        client.subscribe('/topic/event/' + seanceId, msg => {
+            const update = JSON.parse(msg.body);
+            updateCard(update.userId, update.status);
+        });
+    });
+
+    function updateCard(userId, status) {
+        const card = document.getElementById('stu-' + userId);
+        if (!card) return;
+        card.className = 'stu ' + (status === 'Present' ? 'present' : status === 'Late' ? 'retard' : 'absent');
+        const st = card.querySelector('.st');
+        st.textContent = status === 'Present' ? '✓ Présent' : status === 'Late' ? '⏱ Retard' : '— Absent';
+        recount();
+    }
+
+    function recount() {
+        const cards = document.querySelectorAll('.stu');
+        let p = 0, r = 0, a = 0;
+        cards.forEach(c => {
+            if (c.classList.contains('present')) p++;
+            else if (c.classList.contains('retard')) r++;
+            else a++;
+        });
+        document.getElementById('cnt-present').textContent = p;
+        document.getElementById('cnt-late').textContent = r;
+        document.getElementById('cnt-absent').textContent = a;
+    }
+
+    function filterCards() {
+        const val = document.getElementById('filter-status').value;
+        document.querySelectorAll('.stu').forEach(c => {
+            c.style.display = (val === 'all'
+                || (val === 'present' && c.classList.contains('present'))
+                || (val === 'retard'  && c.classList.contains('retard'))
+                || (val === 'absent'  && c.classList.contains('absent')))
+                ? '' : 'none';
+        });
+    }
+</script>
+</body>
+</html>

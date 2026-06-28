@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon compte — Présence Numérique</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+
+    <!-- Nav selon le rôle -->
+    <th:block th:switch="${user.role.name()}">
+        <th:block th:case="'ENSEIGNANT'">
+            <a class="nav-item" th:href="@{/enseignant/accueil}"><span class="ico">🏠</span> Accueil</a>
+            <a class="nav-item" th:href="@{/enseignant/appel}"><span class="ico">📋</span> Faire l'appel</a>
+            <a class="nav-item" th:href="@{/enseignant/historique}"><span class="ico">📊</span> Historique</a>
+        </th:block>
+        <th:block th:case="'ETUDIANT'">
+            <a class="nav-item" th:href="@{/etudiant/accueil}"><span class="ico">🏠</span> Accueil</a>
+            <a class="nav-item" th:href="@{/etudiant/presences}"><span class="ico">📋</span> Mes présences</a>
+        </th:block>
+        <th:block th:case="'SECRETARIAT'">
+            <a class="nav-item" th:href="@{/secretariat/accueil}"><span class="ico">🏠</span> Accueil</a>
+            <a class="nav-item" th:href="@{/secretariat/promotions}"><span class="ico">🎓</span> Promotions</a>
+            <a class="nav-item" th:href="@{/secretariat/etudiants}"><span class="ico">👥</span> Étudiants</a>
+            <a class="nav-item" th:href="@{/secretariat/enseignants}"><span class="ico">📚</span> Enseignants</a>
+            <a class="nav-item" th:href="@{/secretariat/feuilles}"><span class="ico">📋</span> Feuilles</a>
+        </th:block>
+        <th:block th:case="'ADMIN'">
+            <a class="nav-item" th:href="@{/admin/accueil}"><span class="ico">🏠</span> Accueil</a>
+        </th:block>
+    </th:block>
+
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${user.firstname + ' ' + user.lastname}">Utilisateur</div>
+        <div class="e" th:text="${user.role.name()}">ROLE</div>
+    </div>
+    <a class="nav-item active" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item" style="margin-top:4px"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1>Mon compte</h1>
+            <p>Gérez vos informations personnelles.</p>
+        </div>
+    </div>
+
+    <!-- Infos utilisateur -->
+    <div class="card" style="max-width:480px;margin-bottom:20px">
+        <div style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:16px">Informations</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:#67748C">Prénom</span>
+                <span style="font-weight:600" th:text="${user.firstname}">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:#67748C">Nom</span>
+                <span style="font-weight:600" th:text="${user.lastname}">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:#67748C">Email</span>
+                <span style="font-weight:600" th:text="${user.email}">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:#67748C">Rôle</span>
+                <span class="badge present" th:text="${user.role.name()}">—</span>
+            </div>
+            <div th:if="${user.promotion != null}"
+                 style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:#67748C">Promotion</span>
+                <span style="font-weight:600" th:text="${user.promotion.name}">—</span>
+            </div>
+            <div th:if="${user.group != null}"
+                 style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:#67748C">Groupe</span>
+                <span style="font-weight:600" th:text="${user.group.name}">—</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changement de mot de passe -->
+    <div class="card" style="max-width:480px">
+        <div style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:16px">Changer le mot de passe</div>
+
+        <!-- Message erreur -->
+        <div th:if="${error}" class="login-alert" th:text="${error}"></div>
+        <!-- Message succès -->
+        <div th:if="${success}"
+             style="background:#EAF7F0;color:#1B9C5B;padding:10px 14px;border-radius:9px;margin-bottom:16px;font-size:13px"
+             th:text="${success}"></div>
+
+        <form th:action="@{/compte/change-password}" method="post">
+            <div class="form-group">
+                <label class="form-label">Mot de passe actuel</label>
+                <input class="form-control" type="password" name="currentPassword" required
+                       placeholder="Votre mot de passe actuel"/>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nouveau mot de passe</label>
+                <input class="form-control" type="password" name="newPassword" required
+                       placeholder="Au moins 6 caractères"/>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirmer le nouveau mot de passe</label>
+                <input class="form-control" type="password" name="confirmPassword" required
+                       placeholder="Répétez le nouveau mot de passe"/>
+            </div>
+            <button type="submit" class="btn" style="width:100%">Enregistrer le nouveau mot de passe</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

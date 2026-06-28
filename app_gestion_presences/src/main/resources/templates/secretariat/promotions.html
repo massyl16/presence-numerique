@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Promotions — Secrétariat</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" th:href="@{/secretariat/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item active" th:href="@{/secretariat/promotions}"><span class="ico">🎓</span> Promotions</a>
+    <a class="nav-item" th:href="@{/secretariat/etudiants}"><span class="ico">👥</span> Étudiants &amp; groupes</a>
+    <a class="nav-item" th:href="@{/secretariat/enseignants}"><span class="ico">📚</span> Enseignants</a>
+    <a class="nav-item" th:href="@{/secretariat/feuilles}"><span class="ico">📋</span> Feuilles de présence</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${secretariat.firstname + ' ' + secretariat.lastname}">Secrétariat</div>
+        <div class="e">SECRÉTARIAT</div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div><h1>Promotions</h1><p>Gestion des promotions.</p></div>
+    </div>
+
+    <div style="display:flex;gap:20px;align-items:flex-start">
+        <!-- Formulaires -->
+        <div style="display:flex;flex-direction:column;gap:16px;width:280px;flex-shrink:0">
+            <!-- Promotion -->
+            <div class="card">
+                <h3 style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:14px">Nouvelle promotion</h3>
+                <form th:action="@{/secretariat/promotions/create}" method="post">
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input class="form-control" name="name" placeholder="ex: M1 MIAGE" required/>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%">Créer</button>
+                </form>
+            </div>
+            <!-- Groupe -->
+            <div class="card">
+                <h3 style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:14px">Nouveau groupe</h3>
+                <form th:action="@{/secretariat/groupes/create}" method="post">
+                    <div class="form-group">
+                        <label class="form-label">Promotion</label>
+                        <select class="form-control" name="promotionId" required>
+                            <option value="">-- Choisir --</option>
+                            <option th:each="p : ${promotions}" th:value="${p.id}" th:text="${p.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nom du groupe</label>
+                        <input class="form-control" name="name" placeholder="ex: Groupe 1" required/>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%">Créer</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tableaux -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:16px">
+            <!-- Promotions -->
+            <div class="card">
+                <div style="font-size:13px;font-weight:700;color:#15233F;margin-bottom:12px">Promotions</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Promotion</th><th>ID</th></tr></thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(promotions)}">
+                                <td colspan="2" style="text-align:center;color:#67748C;padding:20px">Aucune promotion.</td>
+                            </tr>
+                            <tr th:each="p : ${promotions}">
+                                <td th:text="${p.name}">—</td>
+                                <td style="color:#8A95AC;font-size:12px" th:text="${p.id}">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Groupes -->
+            <div class="card">
+                <div style="font-size:13px;font-weight:700;color:#15233F;margin-bottom:12px">Groupes</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Promotion</th><th>Groupe</th><th></th></tr></thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(groupes)}">
+                                <td colspan="3" style="text-align:center;color:#67748C;padding:20px">Aucun groupe.</td>
+                            </tr>
+                            <tr th:each="g : ${groupes}">
+                                <td th:text="${g.promotion.name}">—</td>
+                                <td th:text="${g.name}">—</td>
+                                <td>
+                                    <form th:action="@{/secretariat/groupes/{id}/delete(id=${g.id})}" method="post"
+                                          onsubmit="return confirm('Supprimer ce groupe ?')">
+                                        <button type="submit" class="btn danger" style="font-size:11px;padding:5px 10px">Suppr.</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil — Présence Numérique</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div>
+            <div class="name">Présence</div>
+            <div class="sub">Numérique</div>
+        </div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item active" th:href="@{/enseignant/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item" th:href="@{/enseignant/appel}"><span class="ico">📋</span> Faire l'appel</a>
+    <a class="nav-item" th:href="@{/enseignant/historique}"><span class="ico">📊</span> Historique</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${enseignant.firstname + ' ' + enseignant.lastname}">Enseignant</div>
+        <div class="e">ENSEIGNANT</div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1>Bonjour, <span th:text="${enseignant.firstname}">Prof</span> 👋</h1>
+            <p>Bienvenue sur votre tableau de bord.</p>
+        </div>
+    </div>
+
+    <!-- Alerte séance active -->
+    <div th:if="${seanceActive}" style="background:#E0E7FF;border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-weight:700;color:#3730A3;margin-bottom:4px">🔴 Appel en cours</div>
+            <div style="font-size:13px;color:#4338CA"
+                 th:text="${seanceActive.promotion.name + (seanceActive.group != null ? ' · ' + seanceActive.group.name : '')}"></div>
+        </div>
+        <a th:href="@{/enseignant/appel/{id}(id=${seanceActive.id})}" class="btn">Reprendre l'appel →</a>
+    </div>
+
+    <!-- Tuiles -->
+    <div class="tiles">
+        <a class="tile green" th:href="@{/enseignant/appel}">
+            <div class="tic">📋</div>
+            <h3>Faire l'appel</h3>
+            <p>Lancez une séance de présence pour votre promotion.</p>
+        </a>
+        <a class="tile" th:href="@{/enseignant/historique}">
+            <div class="tic">📊</div>
+            <h3>Historique</h3>
+            <p>Consultez les résultats de vos séances passées.</p>
+        </a>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil — Secrétariat</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item active" th:href="@{/secretariat/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item" th:href="@{/secretariat/promotions}"><span class="ico">🎓</span> Promotions</a>
+    <a class="nav-item" th:href="@{/secretariat/etudiants}"><span class="ico">👥</span> Étudiants &amp; groupes</a>
+    <a class="nav-item" th:href="@{/secretariat/enseignants}"><span class="ico">📚</span> Enseignants</a>
+    <a class="nav-item" th:href="@{/secretariat/feuilles}"><span class="ico">📋</span> Feuilles de présence</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${secretariat.firstname + ' ' + secretariat.lastname}">Secrétariat</div>
+        <div class="e">SECRÉTARIAT</div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1>Tableau de bord</h1>
+            <p>Gestion des promotions et des étudiants.</p>
+        </div>
+    </div>
+
+    <div class="tiles">
+        <a class="tile green" th:href="@{/secretariat/promotions}">
+            <div class="tic">🎓</div>
+            <h3>Promotions</h3>
+            <p>Créer et gérer les promotions et groupes.</p>
+            <div class="count" th:text="${promotions.size()} + ' promotions'"></div>
+        </a>
+        <a class="tile" th:href="@{/secretariat/etudiants}">
+            <div class="tic">👥</div>
+            <h3>Étudiants</h3>
+            <p>Ajouter et gérer les comptes étudiants.</p>
+            <div class="count" th:text="${nbEtudiants} + ' étudiants'"></div>
+        </a>
+    </div>
+</div>
+</body>
+</html>

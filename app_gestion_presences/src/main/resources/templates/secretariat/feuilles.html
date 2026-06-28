@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Feuilles de présence — Secrétariat</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" th:href="@{/secretariat/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item" th:href="@{/secretariat/promotions}"><span class="ico">🎓</span> Promotions</a>
+    <a class="nav-item" th:href="@{/secretariat/etudiants}"><span class="ico">👥</span> Étudiants &amp; groupes</a>
+    <a class="nav-item" th:href="@{/secretariat/enseignants}"><span class="ico">📚</span> Enseignants</a>
+    <a class="nav-item active" th:href="@{/secretariat/feuilles}"><span class="ico">📋</span> Feuilles de présence</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${secretariat.firstname + ' ' + secretariat.lastname}">Secrétariat</div>
+        <div class="e">SECRÉTARIAT</div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div><h1>Feuilles de présence</h1><p>Consultation par promotion.</p></div>
+    </div>
+
+    <!-- Sélecteur de promotion -->
+    <div class="card" style="max-width:420px;margin-bottom:24px">
+        <div class="form-group" style="margin:0">
+            <label class="form-label">Promotion</label>
+            <select class="form-control" onchange="if(this.value) window.location='/secretariat/feuilles?promoId='+this.value">
+                <option value="">-- Choisir une promotion --</option>
+                <option th:each="p : ${promotions}"
+                        th:value="${p.id}"
+                        th:selected="${p.id == promoId}"
+                        th:text="${p.name}"></option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Résultats : séances de la promotion sélectionnée -->
+    <div th:if="${seances != null}">
+        <div style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:12px"
+             th:text="${promoNom + ' — ' + #lists.size(seances) + ' séance(s) clôturée(s)'}"></div>
+        <div class="card">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Date / Heure</th><th>Intitulé</th><th>Groupe</th><th>Enseignant</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(seances)}">
+                            <td colspan="3" style="text-align:center;color:#67748C;padding:20px">Aucune séance clôturée.</td>
+                        </tr>
+                        <tr th:each="s : ${seances}">
+                            <td th:text="${s.startTime != null ? #temporals.format(s.startTime, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                            <td th:text="${s.title != null ? s.title : '—'}">—</td>
+                            <td th:text="${s.group != null ? s.group.name : 'Tous'}">—</td>
+                            <td th:text="${s.enseignant.firstname + ' ' + s.enseignant.lastname}">—</td>
+                            <td>
+                                <a th:href="@{/secretariat/feuilles/{id}(id=${s.id})}"
+                                   style="font-size:12px;color:#2ED47A;font-weight:600;text-decoration:none">Voir →</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

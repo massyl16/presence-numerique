@@ -1,78 +1,54 @@
 package com.example.app_gestion_presences.service;
 
 import com.example.app_gestion_presences.entity.*;
-
-import com.example.app_gestion_presences.repository.eventRepository;
-import com.example.app_gestion_presences.repository.groupRepository;
-import com.example.app_gestion_presences.repository.promotionRepository;
-import com.example.app_gestion_presences.repository.userRepository;
+import com.example.app_gestion_presences.repository.*;
 import org.springframework.stereotype.Service;
 
-import javax.swing.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 public class eventService {
-    private final eventRepository event_repository;
 
-    private final attendanceService attendance_service;
+    private final EventRepository eventRepository;
+    private final attendanceService attendanceService;
+    private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
 
-    private final userRepository userRepository;
-
-    private final promotionRepository promotionRepository;
-
-    private final groupRepository groupRepository;
-
-
-    public eventService(eventRepository event_repository, attendanceService attendance_service, userRepository userRepository, promotionRepository promotionRepository, groupRepository groupRepository) {
-        this.event_repository = event_repository;
-        this.attendance_service = attendance_service;
-        this.userRepository=userRepository;
-        this.promotionRepository=promotionRepository;
-        this.groupRepository=groupRepository;
+    public eventService(EventRepository eventRepository, attendanceService attendanceService,
+                        UserRepository userRepository, GroupRepository groupRepository) {
+        this.eventRepository = eventRepository;
+        this.attendanceService = attendanceService;
+        this.userRepository = userRepository;
+        this.groupRepository = groupRepository;
     }
 
-    public void createEvent(String title, LocalDateTime startTime, Double latitude, Double longitude, user speaker, promotion promotion, group group){
+    public void createEvent(LocalDateTime scheduledTime, int lateThreshold,
+                            Double latitude, Double longitude,
+                            User enseignant, Promotion promotion, Group group) {
+        Event event = new Event(scheduledTime, lateThreshold, latitude, longitude, enseignant, promotion, group);
+        eventRepository.save(event);
 
-        event event = new event(title,latitude,longitude,startTime,speaker,promotion,group);
-
-        event_repository.save(event);
-        //creer attendances
-
-        if (Objects.equals(group.getName(), "Complet")){
-            List<group> groups = groupRepository.findAllByPromotion(promotion);
-            for (int i = 0; i < groups.size(); i++) {
-                List<user> participant_list = userRepository.findAllByPromotionAndGroup(promotion,groups.get(i));
-
-                for (int j = 0; j < participant_list.size(); j++) {
-                    attendance_service.createAttendance(participant_list.get(j),event);
+        if (Objects.equals(group.getName(), "Complet")) {
+            List<Group> groups = groupRepository.findAllByPromotion(promotion);
+            for (Group g : groups) {
+                for (User u : userRepository.findAllByPromotionAndGroup(promotion, g)) {
+                    attendanceService.createAttendance(u, event);
                 }
             }
-        }else{
-            List<user> participant_list = userRepository.findAllByPromotionAndGroup(promotion,group);
-
-            for (int i = 0; i < participant_list.size(); i++) {
-                attendance_service.createAttendance(participant_list.get(i),event);
+        } else {
+            for (User u : userRepository.findAllByPromotionAndGroup(promotion, group)) {
+                attendanceService.createAttendance(u, event);
             }
         }
     }
 
-    //getAllEvents pour les intervenants
-    public event[] getAllEvents(user user) {
-        List<event> attendances;
-        // A changer
-        if(user.getRole()==Role.Secretary){
-            //attendances=event_repository.findAllBySecretary(user);
-            attendances=event_repository.findAllBySpeaker(user);
-        }else{
-            attendances=event_repository.findAllBySpeaker(user);
+    public Event[] getAllEvents(User user) {
+        if (user.getRole() == Role.SECRETARIAT) {
+            return eventRepository.findAll().toArray(new Event[0]);
         }
-        event[] events = new event[attendances.size()];
-        for (int i = 0; i < events.length; i++) {
-            events[i]=(attendances.get(i));
-        }
-        return events;
+        List<Event> events = eventRepository.findAllByEnseignant(user);
+        return events.toArray(new Event[0]);
     }
 }

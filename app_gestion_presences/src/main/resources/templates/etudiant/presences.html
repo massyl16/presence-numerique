@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes présences — Présence Numérique</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" th:href="@{/etudiant/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item active" th:href="@{/etudiant/presences}"><span class="ico">📋</span> Mes présences</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${etudiant.firstname + ' ' + etudiant.lastname}">Étudiant</div>
+        <div class="e" th:text="${etudiant.promotion != null ? etudiant.promotion.name : 'ETUDIANT'}"></div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1>Mes présences</h1>
+            <p>Récapitulatif de votre assiduité.</p>
+        </div>
+    </div>
+
+    <!-- Récap chiffré -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="val" th:text="${pctPresence + '%'}">0%</div>
+            <div class="lbl">Taux de présence</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" th:text="${nbPresent}">0</div>
+            <div class="lbl" style="color:#1B9C5B">Présences</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" th:text="${nbRetard}">0</div>
+            <div class="lbl" style="color:#C2841B">Retards</div>
+        </div>
+    </div>
+
+    <!-- Tableau détaillé -->
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date / Heure</th>
+                        <th>Promotion</th>
+                        <th>Groupe</th>
+                        <th>Statut</th>
+                        <th>Retard</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(presences)}">
+                        <td colspan="5" style="text-align:center;color:#67748C;padding:30px">
+                            Aucune séance enregistrée.
+                        </td>
+                    </tr>
+                    <tr th:each="att : ${presences}">
+                        <td th:text="${att.event.startTime != null ? att.event.startTime.toString().replace('T',' ').substring(0,16) : '—'}">—</td>
+                        <td th:text="${att.event.promotion.name}">—</td>
+                        <td th:text="${att.event.group != null ? att.event.group.name : 'Tous'}">—</td>
+                        <td>
+                            <span th:class="${att.status.name() == 'Present' ? 'badge present' : (att.status.name() == 'Late' ? 'badge retard' : 'badge absent')}"
+                                  th:text="${att.status.name() == 'Present' ? 'Présent' : (att.status.name() == 'Late' ? 'Retard' : 'Absent')}">
+                            </span>
+                        </td>
+                        <td th:text="${att.lateMinutes > 0 ? att.lateMinutes + ' min' : '—'}">—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

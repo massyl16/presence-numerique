@@ -1,8 +1,7 @@
 package com.example.app_gestion_presences.service;
 
-import com.example.app_gestion_presences.entity.*;
-
-import com.example.app_gestion_presences.repository.promotionRepository;
+import com.example.app_gestion_presences.entity.Promotion;
+import com.example.app_gestion_presences.repository.PromotionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,18 +9,17 @@ import java.util.List;
 @Service
 public class promotionService {
 
-    private final promotionRepository promotionRepository;
+    private final PromotionRepository promotionRepository;
 
-    public promotionService(promotionRepository promotionRepository){
-        this.promotionRepository=promotionRepository;
+    public promotionService(PromotionRepository promotionRepository) {
+        this.promotionRepository = promotionRepository;
     }
 
-    public void createPromotion(String name){
-        promotion promotion = new promotion(name);
-        promotionRepository.save(promotion);
+    public void createPromotion(String name) {
+        promotionRepository.save(new Promotion(name));
     }
 
-    public List<promotion> getAllPromotions(){
+    public List<Promotion> getAllPromotions() {
         return promotionRepository.findAll();
     }
 }

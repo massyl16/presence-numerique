@@ -1,42 +1,28 @@
 package com.example.app_gestion_presences.service;
 
-import com.example.app_gestion_presences.entity.AttendanceStatus;
-import com.example.app_gestion_presences.entity.attendance;
-import com.example.app_gestion_presences.entity.event;
-import com.example.app_gestion_presences.entity.user;
-import com.example.app_gestion_presences.repository.attendanceRepository;
-import com.example.app_gestion_presences.repository.eventRepository;
-import com.example.app_gestion_presences.repository.userRepository;
+import com.example.app_gestion_presences.entity.*;
+import com.example.app_gestion_presences.repository.AttendanceRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class attendanceService {
-    private final attendanceRepository attendance_repository;
 
+    private final AttendanceRepository attendanceRepository;
 
-    public attendanceService(attendanceRepository attendance_repository) {
-        this.attendance_repository = attendance_repository;
+    public attendanceService(AttendanceRepository attendanceRepository) {
+        this.attendanceRepository = attendanceRepository;
     }
 
-    public void createAttendance(user user, event event){
-
-        attendance attendance = new attendance(user, event);
-
-        attendance_repository.save(attendance);
+    public void createAttendance(User user, Event event) {
+        // Anti-doublon
+        if (attendanceRepository.findByUserAndEvent(user, event).isPresent()) return;
+        attendanceRepository.save(new Attendance(user, event));
     }
 
-    //getAllEvents pour les participants
-    public event[] getAllEvents(user user) {
-        List<attendance> attendances=attendance_repository.findAllByUser(user);
-        event[] events = new event[attendances.size()];
-        for (int i = 0; i < events.length; i++) {
-            events[i]=(attendances.get(i)).getEvent();
-        }
-        return events;
+    public Event[] getAllEvents(User user) {
+        List<Attendance> attendances = attendanceRepository.findAllByUser(user);
+        return attendances.stream().map(Attendance::getEvent).toArray(Event[]::new);
     }
 }

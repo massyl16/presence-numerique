@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Étudiants — Secrétariat</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" th:href="@{/secretariat/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item" th:href="@{/secretariat/promotions}"><span class="ico">🎓</span> Promotions</a>
+    <a class="nav-item active" th:href="@{/secretariat/etudiants}"><span class="ico">👥</span> Étudiants &amp; groupes</a>
+    <a class="nav-item" th:href="@{/secretariat/enseignants}"><span class="ico">📚</span> Enseignants</a>
+    <a class="nav-item" th:href="@{/secretariat/feuilles}"><span class="ico">📋</span> Feuilles de présence</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${secretariat.firstname + ' ' + secretariat.lastname}">Secrétariat</div>
+        <div class="e">SECRÉTARIAT</div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div><h1>Étudiants</h1><p>Liste et ajout des comptes étudiants.</p></div>
+    </div>
+
+    <div style="display:flex;gap:20px;align-items:flex-start">
+        <!-- Formulaire ajout -->
+        <div class="card" style="width:300px;flex-shrink:0">
+            <h3 style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:14px">Ajouter un étudiant</h3>
+            <form th:action="@{/secretariat/etudiants/create}" method="post">
+                <div class="form-group">
+                    <label class="form-label">Prénom</label>
+                    <input class="form-control" name="firstname" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom</label>
+                    <input class="form-control" name="lastname" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" type="email" name="email" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Promotion</label>
+                    <select class="form-control" name="promotionId" required>
+                        <option value="">-- Choisir --</option>
+                        <option th:each="p : ${promotions}" th:value="${p.id}" th:text="${p.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Groupe</label>
+                    <select class="form-control" name="groupId" required>
+                        <option value="">-- Choisir --</option>
+                        <option th:each="g : ${groupes}" th:value="${g.id}"
+                                th:text="${g.promotion.name + ' · ' + g.name}"></option>
+                    </select>
+                </div>
+                <div style="font-size:11px;color:#8A95AC;margin-bottom:12px">
+                    Mot de passe par défaut : <strong>password123</strong>
+                </div>
+                <button type="submit" class="btn" style="width:100%">Ajouter</button>
+            </form>
+        </div>
+
+        <!-- Liste -->
+        <div class="card" style="flex:1">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Nom</th><th>Email</th><th>Promotion</th><th>Groupe</th><th></th></tr></thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(etudiants)}">
+                            <td colspan="5" style="text-align:center;color:#67748C;padding:20px">Aucun étudiant.</td>
+                        </tr>
+                        <tr th:each="e : ${etudiants}">
+                            <td th:text="${e.firstname + ' ' + e.lastname}">—</td>
+                            <td th:text="${e.email}">—</td>
+                            <td th:text="${e.promotion != null ? e.promotion.name : '—'}">—</td>
+                            <td th:text="${e.group != null ? e.group.name : '—'}">—</td>
+                            <td>
+                                <form th:action="@{/secretariat/etudiants/{id}/delete(id=${e.id})}" method="post"
+                                      onsubmit="return confirm('Supprimer cet étudiant ?')">
+                                    <button type="submit" class="btn danger" style="font-size:11px;padding:5px 10px">Suppr.</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
