@@ -110,7 +110,7 @@
 
         navigator.geolocation.getCurrentPosition(
             pos => {
-                if (pos.coords.accuracy > 100) {
+                if (pos.coords.accuracy > 300) {
                     err.textContent = 'Précision GPS insuffisante (' + Math.round(pos.coords.accuracy) + ' m). Déplacez-vous en espace ouvert et réessayez.';
                     btn.disabled = false;
                     return;
@@ -132,7 +132,7 @@
                 err.textContent = 'Impossible d\'obtenir votre position GPS. Activez la localisation.';
                 btn.disabled = false;
             },
-            { enableHighAccuracy: true, timeout: 10000 }
+            { enableHighAccuracy: false, timeout: 10000 }
         );
     }
 </script>

@@ -66,7 +66,7 @@ public class Attendance {
                     * Math.sin(dLon / 2) * Math.sin(dLon / 2);
             double distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-            if (distance > 50) {
+            if (distance > 150) {
                 return "Vous êtes trop loin de l'emplacement de l'évênement";
             }
         }

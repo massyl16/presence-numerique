@@ -67,8 +67,8 @@ Cliquez **Historique** pour consulter toutes vos séances passées.
 2. Si un appel est en cours pour votre groupe, le bouton **Je suis présent** apparaît automatiquement (sans avoir à rafraîchir la page)
 3. Cliquez le bouton
    - Le navigateur demande votre géolocalisation → **Autoriser**
-   - Le serveur vérifie que vous êtes à moins de **50 mètres** de l'enseignant
-   - Si votre GPS manque de précision (> 100 m d'incertitude), un message vous demande de vous déplacer en espace ouvert
+   - Le serveur vérifie que vous êtes à moins de **150 mètres** de l'enseignant
+   - Si votre GPS manque de précision (> 300 m d'incertitude), un message vous demande de vous déplacer en espace ouvert
 4. Un message de confirmation s'affiche — votre statut apparaît immédiatement sur le trombinoscope de l'enseignant
 
 > **Vos coordonnées GPS ne sont jamais enregistrées.** Seul votre statut (Présent / Retard / Absent) et l'heure de validation sont conservés.
@@ -146,9 +146,9 @@ Cliquez **Mon compte** dans le menu de gauche pour :
 
 | Règle | Détail |
 |-------|--------|
-| Proximité GPS | L'étudiant doit être à moins de **50 mètres** de l'enseignant |
+| Proximité GPS | L'étudiant doit être à moins de **150 mètres** de l'enseignant |
 | Seuil de retard | Configurable par séance : 5, 10, 15 ou 20 min après le démarrage |
 | Jeton de séance | Invalidé à la clôture — impossible de valider une présence après |
 | Anti-doublon | Impossible de valider deux fois la même séance |
 | RGPD | Les coordonnées GPS des étudiants ne sont jamais stockées |
-| Précision GPS | Refusé si la précision GPS est supérieure à 100 m |
+| Précision GPS | Refusé si la précision GPS est supérieure à 300 m |

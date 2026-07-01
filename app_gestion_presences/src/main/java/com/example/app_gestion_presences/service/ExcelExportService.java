@@ -218,6 +218,5 @@ public class ExcelExportService {
         Cell val = r.createCell(1);
         val.setCellValue(value);
         val.setCellStyle(style);
-        sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, 0));
     }
 }
