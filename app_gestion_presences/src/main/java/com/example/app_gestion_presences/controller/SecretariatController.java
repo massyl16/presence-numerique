@@ -5,12 +5,15 @@ import com.example.app_gestion_presences.repository.*;
 import com.example.app_gestion_presences.service.ExcelExportService;
 import com.example.app_gestion_presences.service.promotionService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.util.List;
@@ -95,6 +98,41 @@ public class SecretariatController {
     public String deleteGroupe(@PathVariable Long id) {
         groupRepository.deleteById(id);
         return "redirect:/secretariat/promotions";
+    }
+
+    @PostMapping("/secretariat/groupes/import-excel")
+    public String importGroupesExcel(@RequestParam MultipartFile file,
+                                      @RequestParam Long promotionId,
+                                      RedirectAttributes ra) {
+        if (file.isEmpty()) {
+            ra.addFlashAttribute("importError", "Fichier vide.");
+            return "redirect:/secretariat/etudiants";
+        }
+        Promotion promotion = promotionRepository.findById(promotionId).orElseThrow();
+        List<Group> existing = groupRepository.findAllByPromotion(promotion);
+        int created = 0;
+        try (Workbook wb = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = wb.getSheetAt(0);
+            for (Row row : sheet) {
+                Cell cell = row.getCell(0);
+                if (cell == null) continue;
+                String name = (cell.getCellType() == CellType.STRING)
+                        ? cell.getStringCellValue().trim()
+                        : String.valueOf((int) cell.getNumericCellValue()).trim();
+                if (name.isEmpty()) continue;
+                String finalName = name;
+                boolean exists = existing.stream().anyMatch(g -> g.getName().equals(finalName));
+                if (!exists) {
+                    Group g = groupRepository.save(new Group(name, promotion));
+                    existing.add(g);
+                    created++;
+                }
+            }
+            ra.addFlashAttribute("importSuccess", created + " groupe(s) importé(s) avec succès.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("importError", "Erreur lors de l'import : " + e.getMessage());
+        }
+        return "redirect:/secretariat/etudiants";
     }
 
     // ── Gestion des étudiants ───────────────────────────────────────────

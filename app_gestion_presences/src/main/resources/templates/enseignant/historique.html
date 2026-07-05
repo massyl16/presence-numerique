@@ -32,14 +32,18 @@
     </div>
 
     <!-- Statistiques globales -->
-    <div class="stats-grid">
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
         <div class="stat-card">
             <div class="val" th:text="${totalAppels}">0</div>
-            <div class="lbl">Séances réalisées</div>
+            <div class="lbl">Appels réalisés</div>
         </div>
         <div class="stat-card">
             <div class="val" th:text="${tauxMoyen + '%'}">0%</div>
             <div class="lbl">Taux de présence moyen</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" th:text="${etudiantsASurveiller}">0</div>
+            <div class="lbl" style="color:#C0392B">Étudiants à surveiller</div>
         </div>
     </div>
 
@@ -62,10 +66,9 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Date / Heure</th>
-                        <th>Intitulé</th>
+                        <th>Date</th>
+                        <th>Heure</th>
                         <th>Promotion</th>
-                        <th>Groupe</th>
                         <th>Présents</th>
                         <th>Retards</th>
                         <th>Absents</th>
@@ -75,17 +78,20 @@
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(stats)}">
-                        <td colspan="9" style="text-align:center;color:#67748C;padding:30px">Aucune séance clôturée.</td>
+                        <td colspan="8" style="text-align:center;color:#67748C;padding:30px">Aucune séance clôturée.</td>
                     </tr>
                     <tr th:each="s : ${stats}">
                         <td>
                             <span th:if="${s.seance.startTime != null}"
-                                  th:text="${#temporals.format(s.seance.startTime, 'dd/MM/yyyy HH:mm')}"></span>
+                                  th:text="${#temporals.format(s.seance.startTime, 'dd/MM/yyyy')}"></span>
                             <span th:unless="${s.seance.startTime != null}">—</span>
                         </td>
-                        <td th:text="${s.seance.title != null ? s.seance.title : '—'}">—</td>
-                        <td th:text="${s.seance.promotion.name}">—</td>
-                        <td th:text="${s.seance.group != null ? s.seance.group.name : 'Tous'}">—</td>
+                        <td>
+                            <span th:if="${s.seance.startTime != null}"
+                                  th:text="${#temporals.format(s.seance.startTime, 'HH:mm')}"></span>
+                            <span th:unless="${s.seance.startTime != null}">—</span>
+                        </td>
+                        <td th:text="${s.seance.promotion.name + (s.seance.group != null ? ' · ' + s.seance.group.name : '')}">—</td>
                         <td><span class="badge present" th:text="${s.presents}">0</span></td>
                         <td><span class="badge retard"  th:text="${s.retards}">0</span></td>
                         <td><span class="badge absent"  th:text="${s.absents}">0</span></td>

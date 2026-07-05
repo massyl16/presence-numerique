@@ -30,6 +30,14 @@
         <div><h1>Étudiants</h1><p>Liste et ajout des comptes étudiants.</p></div>
     </div>
 
+    <!-- Messages flash import -->
+    <div th:if="${importSuccess}" style="background:#EAF7F0;border:1px solid #BBEAD0;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#1B9C5B;font-size:13px">
+        ✅ <span th:text="${importSuccess}"></span>
+    </div>
+    <div th:if="${importError}" style="background:#FCE8E8;border:1px solid #F5C6C6;border-radius:10px;padding:12px 16px;margin-bottom:16px;color:#C0392B;font-size:13px">
+        ❌ <span th:text="${importError}"></span>
+    </div>
+
     <div style="display:flex;gap:20px;align-items:flex-start">
         <!-- Formulaire ajout -->
         <div class="card" style="width:300px;flex-shrink:0">
@@ -66,6 +74,27 @@
                     Mot de passe par défaut : <strong>password123</strong>
                 </div>
                 <button type="submit" class="btn" style="width:100%">Ajouter</button>
+            </form>
+
+            <hr style="margin:20px 0;border:none;border-top:1px solid #EDF0F5">
+
+            <h3 style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:14px">🗂 Importer des groupes (Excel)</h3>
+            <p style="font-size:11px;color:#8A95AC;margin-bottom:12px">
+                Fichier Excel : colonne A = nom du groupe, une ligne par groupe.
+            </p>
+            <form th:action="@{/secretariat/groupes/import-excel}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">Promotion</label>
+                    <select class="form-control" name="promotionId" required>
+                        <option value="">-- Choisir --</option>
+                        <option th:each="p : ${promotions}" th:value="${p.id}" th:text="${p.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fichier Excel (.xlsx)</label>
+                    <input type="file" class="form-control" name="file" accept=".xlsx,.xls" required/>
+                </div>
+                <button type="submit" class="btn alt" style="width:100%">⬆ Importer les groupes</button>
             </form>
         </div>
 

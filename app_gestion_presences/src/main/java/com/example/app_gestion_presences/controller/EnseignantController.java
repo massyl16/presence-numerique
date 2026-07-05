@@ -176,14 +176,14 @@ public class EnseignantController {
                               @RequestParam(required = false) Long promotionId,
                               Model model) {
         User enseignant = getCurrentUser(ud);
-        List<Event> seances = eventRepository
+        List<Event> toutesSeances = eventRepository
                 .findAllByEnseignantAndClosedOrderByStartTimeDesc(enseignant, true);
 
-        if (promotionId != null) {
-            seances = seances.stream()
-                    .filter(e -> e.getPromotion().getId().equals(promotionId))
-                    .toList();
-        }
+        final List<Event> seances = (promotionId != null)
+                ? toutesSeances.stream()
+                        .filter(e -> e.getPromotion().getId().equals(promotionId))
+                        .toList()
+                : toutesSeances;
 
         // Statistiques globales
         int totalAppels = seances.size();
@@ -194,12 +194,24 @@ public class EnseignantController {
             return (double) p / att.size() * 100;
         }).average().orElse(0);
 
-        model.addAttribute("enseignant",  enseignant);
-        model.addAttribute("seances",     seances);
-        model.addAttribute("promotions",  promotionRepository.findAll());
-        model.addAttribute("promotionId", promotionId);
-        model.addAttribute("totalAppels", totalAppels);
-        model.addAttribute("tauxMoyen",   Math.round(tauxMoyen));
+        // Étudiants avec taux de présence < 50% sur les séances filtrées
+        long etudiantsASurveiller = userRepository.findAllByRole(Role.ETUDIANT).stream()
+                .filter(u -> {
+                    List<Attendance> att = attendanceRepository.findAllByUser(u).stream()
+                            .filter(a -> seances.stream().anyMatch(e -> e.getId().equals(a.getEvent().getId())))
+                            .toList();
+                    if (att.isEmpty()) return false;
+                    long presents = att.stream().filter(a -> a.getStatus() != AttendanceStatus.Absent).count();
+                    return (double) presents / att.size() < 0.5;
+                }).count();
+
+        model.addAttribute("enseignant",           enseignant);
+        model.addAttribute("seances",              seances);
+        model.addAttribute("promotions",           promotionRepository.findAll());
+        model.addAttribute("promotionId",          promotionId);
+        model.addAttribute("totalAppels",          totalAppels);
+        model.addAttribute("tauxMoyen",            Math.round(tauxMoyen));
+        model.addAttribute("etudiantsASurveiller", etudiantsASurveiller);
 
         // Enrichit chaque séance avec ses stats
         List<SeanceStats> stats = seances.stream().map(e -> {

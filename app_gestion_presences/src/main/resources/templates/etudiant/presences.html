@@ -31,7 +31,7 @@
     </div>
 
     <!-- Récap chiffré -->
-    <div class="stats-grid">
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
         <div class="stat-card">
             <div class="val" th:text="${pctPresence + '%'}">0%</div>
             <div class="lbl">Taux de présence</div>
@@ -43,6 +43,10 @@
         <div class="stat-card">
             <div class="val" th:text="${nbRetard}">0</div>
             <div class="lbl" style="color:#C2841B">Retards</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" th:text="${nbAbsent}">0</div>
+            <div class="lbl" style="color:#C0392B">Absences</div>
         </div>
     </div>
 
