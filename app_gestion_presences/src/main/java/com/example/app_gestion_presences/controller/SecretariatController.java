@@ -214,10 +214,30 @@ public class SecretariatController {
                 List<Event> seances = eventRepository
                         .findAllByPromotionAndClosedOrderByStartTimeDesc(promo, true);
                 model.addAttribute("seances", seances);
+
+                // Cumul par étudiant (onglet 2)
+                List<EtudiantStats> etudiantsStats = userRepository.findAllByPromotion(promo)
+                        .stream()
+                        .filter(u -> u.getRole() == Role.ETUDIANT)
+                        .map(u -> {
+                            List<Attendance> att = attendanceRepository.findAllByUser(u).stream()
+                                    .filter(a -> seances.stream().anyMatch(e -> e.getId().equals(a.getEvent().getId())))
+                                    .toList();
+                            long p  = att.stream().filter(a -> a.getStatus() == AttendanceStatus.Present).count();
+                            long r  = att.stream().filter(a -> a.getStatus() == AttendanceStatus.Late).count();
+                            long ab = att.stream().filter(a -> a.getStatus() == AttendanceStatus.Absent).count();
+                            int taux = att.isEmpty() ? 0 : (int) Math.round((p + r) * 100.0 / att.size());
+                            return new EtudiantStats(u, (int) p, (int) r, (int) ab, taux);
+                        })
+                        .sorted((a, b) -> Integer.compare(a.taux(), b.taux()))
+                        .toList();
+                model.addAttribute("etudiantsStats", etudiantsStats);
             }
         }
         return "secretariat/feuilles";
     }
+
+    public record EtudiantStats(User etudiant, int presents, int retards, int absents, int taux) {}
 
     @GetMapping("/secretariat/feuilles/{seanceId}")
     public String feuilleDetail(@PathVariable Long seanceId,

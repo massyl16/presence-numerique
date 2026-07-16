@@ -93,6 +93,7 @@ public class DataInitializer {
         s1.setStartTime(LocalDateTime.now().minusDays(5).withHour(9).withMinute(0).withSecond(0));
         s1.setLateThreshold(10);
         s1.setStarted(false);
+        s1.setClosed(true);
         s1.setToken(null);
         eventRepository.save(s1);
 
@@ -112,6 +113,7 @@ public class DataInitializer {
         s2.setStartTime(LocalDateTime.now().minusDays(5).withHour(14).withMinute(0).withSecond(0));
         s2.setLateThreshold(15);
         s2.setStarted(false);
+        s2.setClosed(true);
         s2.setToken(null);
         eventRepository.save(s2);
 
@@ -130,6 +132,7 @@ public class DataInitializer {
         s3.setStartTime(LocalDateTime.now().minusDays(3).withHour(10).withMinute(30).withSecond(0));
         s3.setLateThreshold(10);
         s3.setStarted(false);
+        s3.setClosed(true);
         s3.setToken(null);
         eventRepository.save(s3);
 
@@ -148,6 +151,7 @@ public class DataInitializer {
         s4.setStartTime(LocalDateTime.now().minusDays(1).withHour(13).withMinute(30).withSecond(0));
         s4.setLateThreshold(5);
         s4.setStarted(false);
+        s4.setClosed(true);
         s4.setToken(null);
         eventRepository.save(s4);
 

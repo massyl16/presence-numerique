@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <title>Feuilles de présence — Secrétariat</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <style>
+        .tabs { display:flex; gap:0; margin-bottom:0; border-bottom:2px solid #E2E8F0; }
+        .tab-btn {
+            padding:10px 22px; font-size:13.5px; font-weight:600; color:#67748C;
+            background:none; border:none; border-bottom:3px solid transparent;
+            cursor:pointer; margin-bottom:-2px; transition:color .15s, border-color .15s;
+        }
+        .tab-btn.active { color:#15233F; border-bottom-color:#2ED47A; }
+        .tab-panel { display:none; }
+        .tab-panel.active { display:block; }
+        .badge-alert { background:#FEE2E2; color:#C0392B; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+    </style>
 </head>
 <body>
 <div class="sidebar">
@@ -44,35 +56,100 @@
         </div>
     </div>
 
-    <!-- Résultats : séances de la promotion sélectionnée -->
+    <!-- Onglets — visibles seulement si une promotion est sélectionnée -->
     <div th:if="${seances != null}">
-        <div style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:12px"
+
+        <div style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:16px"
              th:text="${promoNom + ' — ' + #lists.size(seances) + ' séance(s) clôturée(s)'}"></div>
-        <div class="card">
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr><th>Date / Heure</th><th>Intitulé</th><th>Groupe</th><th>Enseignant</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                        <tr th:if="${#lists.isEmpty(seances)}">
-                            <td colspan="3" style="text-align:center;color:#67748C;padding:20px">Aucune séance clôturée.</td>
-                        </tr>
-                        <tr th:each="s : ${seances}">
-                            <td th:text="${s.startTime != null ? #temporals.format(s.startTime, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
-                            <td th:text="${s.title != null ? s.title : '—'}">—</td>
-                            <td th:text="${s.group != null ? s.group.name : 'Tous'}">—</td>
-                            <td th:text="${s.enseignant.firstname + ' ' + s.enseignant.lastname}">—</td>
-                            <td>
-                                <a th:href="@{/secretariat/feuilles/{id}(id=${s.id})}"
-                                   style="font-size:12px;color:#2ED47A;font-weight:600;text-decoration:none">Voir →</a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('par-appel', this)">📋 Par appel</button>
+            <button class="tab-btn"        onclick="showTab('par-etudiant', this)">👤 Par étudiant (cumul)</button>
+        </div>
+
+        <!-- Onglet 1 : Par appel -->
+        <div id="par-appel" class="tab-panel active">
+            <div class="card" style="border-top-left-radius:0;border-top-right-radius:0">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date / Heure</th>
+                                <th>Groupe</th>
+                                <th>Enseignant</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(seances)}">
+                                <td colspan="4" style="text-align:center;color:#67748C;padding:20px">Aucune séance clôturée.</td>
+                            </tr>
+                            <tr th:each="s : ${seances}">
+                                <td th:text="${s.startTime != null ? #temporals.format(s.startTime, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                                <td th:text="${s.group != null ? s.group.name : 'Tous'}">—</td>
+                                <td th:text="${s.enseignant.firstname + ' ' + s.enseignant.lastname}">—</td>
+                                <td>
+                                    <a th:href="@{/secretariat/feuilles/{id}(id=${s.id})}"
+                                       style="font-size:12px;color:#2ED47A;font-weight:600;text-decoration:none">Voir →</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+
+        <!-- Onglet 2 : Par étudiant (cumul) -->
+        <div id="par-etudiant" class="tab-panel">
+            <div class="card" style="border-top-left-radius:0;border-top-right-radius:0">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Étudiant</th>
+                                <th>Groupe</th>
+                                <th>Présences</th>
+                                <th>Retards</th>
+                                <th>Absences</th>
+                                <th>Taux</th>
+                                <th>Alerte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(etudiantsStats)}">
+                                <td colspan="7" style="text-align:center;color:#67748C;padding:20px">Aucun étudiant dans cette promotion.</td>
+                            </tr>
+                            <tr th:each="es : ${etudiantsStats}">
+                                <td th:text="${es.etudiant.firstname + ' ' + es.etudiant.lastname}">—</td>
+                                <td th:text="${es.etudiant.group != null ? es.etudiant.group.name : '—'}">—</td>
+                                <td><span class="badge present" th:text="${es.presents}">0</span></td>
+                                <td><span class="badge retard"  th:text="${es.retards}">0</span></td>
+                                <td><span class="badge absent"  th:text="${es.absents}">0</span></td>
+                                <td>
+                                    <span th:text="${es.taux + '%'}"
+                                          th:class="${es.taux >= 75 ? 'badge present' : (es.taux >= 50 ? 'badge retard' : 'badge absent')}">0%</span>
+                                </td>
+                                <td>
+                                    <span th:if="${es.taux < 75}" class="badge-alert">⚠ À signaler</span>
+                                    <span th:unless="${es.taux < 75}" style="color:#1B9C5B;font-size:12px">✓</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
+
+<script>
+    function showTab(id, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+    }
+</script>
 </body>
 </html>

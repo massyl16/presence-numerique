@@ -23,4 +23,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     /** Séances passées d'une promotion (clôturées) */
     List<Event> findAllByPromotionAndClosedOrderByStartTimeDesc(Promotion promotion, boolean closed);
+
+    /** Toutes les séances clôturées (admin — toutes promotions) */
+    List<Event> findAllByClosedOrderByStartTimeDesc(boolean closed);
 }

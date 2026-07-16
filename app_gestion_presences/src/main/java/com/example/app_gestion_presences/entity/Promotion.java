@@ -11,9 +11,16 @@ public class Promotion {
 
     private String name;
 
+    @ManyToOne
+    @JoinColumn(name = "secretaire_id")
+    private User secretaireResponsable;
+
     public Long getId() { return id; }
     public String getName() { return name; }
+    public User getSecretaireResponsable() { return secretaireResponsable; }
+
     public void setName(String name) { this.name = name; }
+    public void setSecretaireResponsable(User secretaireResponsable) { this.secretaireResponsable = secretaireResponsable; }
 
     public Promotion(String name) { this.name = name; }
     public Promotion() {}

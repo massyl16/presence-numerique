@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Historique global — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <div class="logo">✓</div>
+        <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
+    </div>
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" th:href="@{/admin/accueil}"><span class="ico">🏠</span> Accueil</a>
+    <a class="nav-item" th:href="@{/admin/affectations}"><span class="ico">🔗</span> Affectations</a>
+    <a class="nav-item active" th:href="@{/admin/historique}"><span class="ico">📊</span> Historique global</a>
+    <div class="role-badge" style="margin-top:auto">
+        <div class="r" th:text="${email}">Admin</div>
+        <div class="e">ADMINISTRATEUR</div>
+    </div>
+    <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
+    <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1>Historique global</h1>
+            <p>Toutes les séances clôturées — toutes formations confondues.</p>
+        </div>
+    </div>
+
+    <!-- Stat -->
+    <div class="stats-grid" style="grid-template-columns:repeat(1,1fr);max-width:220px;margin-bottom:24px">
+        <div class="stat-card">
+            <div class="val" th:text="${totalSeances}">0</div>
+            <div class="lbl">Séances clôturées</div>
+        </div>
+    </div>
+
+    <!-- Filtre -->
+    <div class="toolbar-top">
+        <form th:action="@{/admin/historique}" method="get" style="display:flex;gap:10px;align-items:center">
+            <select class="filter" name="promoId" onchange="this.form.submit()">
+                <option value="">Toutes les formations</option>
+                <option th:each="promo : ${promotions}"
+                        th:value="${promo.id}"
+                        th:selected="${promo.id == promoId}"
+                        th:text="${promo.name}"></option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Heure</th>
+                        <th>Formation / Groupe</th>
+                        <th>Enseignant</th>
+                        <th>Présents</th>
+                        <th>Retards</th>
+                        <th>Absents</th>
+                        <th>Taux</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(stats)}">
+                        <td colspan="8" style="text-align:center;color:#67748C;padding:30px">
+                            Aucune séance clôturée.
+                        </td>
+                    </tr>
+                    <tr th:each="s : ${stats}">
+                        <td>
+                            <span th:if="${s.seance.startTime != null}"
+                                  th:text="${#temporals.format(s.seance.startTime, 'dd/MM/yyyy')}"></span>
+                            <span th:unless="${s.seance.startTime != null}">—</span>
+                        </td>
+                        <td>
+                            <span th:if="${s.seance.startTime != null}"
+                                  th:text="${#temporals.format(s.seance.startTime, 'HH:mm')}"></span>
+                            <span th:unless="${s.seance.startTime != null}">—</span>
+                        </td>
+                        <td th:text="${s.seance.promotion.name + (s.seance.group != null ? ' · ' + s.seance.group.name : '')}">—</td>
+                        <td th:text="${s.seance.enseignant.firstname + ' ' + s.seance.enseignant.lastname}">—</td>
+                        <td><span class="badge present" th:text="${s.presents}">0</span></td>
+                        <td><span class="badge retard"  th:text="${s.retards}">0</span></td>
+                        <td><span class="badge absent"  th:text="${s.absents}">0</span></td>
+                        <td>
+                            <span th:text="${s.taux + '%'}"
+                                  th:class="${s.taux >= 75 ? 'badge present' : (s.taux >= 50 ? 'badge retard' : 'badge absent')}">0%</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
