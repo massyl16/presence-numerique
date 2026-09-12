@@ -2,6 +2,8 @@
 FROM public.ecr.aws/amazoncorretto/amazoncorretto:17 AS build
 WORKDIR /app
 
+RUN yum install -y tar gzip
+
 COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
