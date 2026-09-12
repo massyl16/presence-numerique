@@ -41,9 +41,10 @@ public class AdminController {
     @GetMapping("/admin/accueil")
     public String accueil(@AuthenticationPrincipal UserDetails ud, Model model) {
         addAdminAttrs(ud, model);
-        model.addAttribute("nbEtudiants",   userRepository.findAllByRole(Role.ETUDIANT).size());
-        model.addAttribute("nbEnseignants", userRepository.findAllByRole(Role.ENSEIGNANT).size());
-        model.addAttribute("nbSecretariat", userRepository.findAllByRole(Role.SECRETARIAT).size());
+        model.addAttribute("nbEtudiants",    userRepository.findAllByRole(Role.ETUDIANT).size());
+        model.addAttribute("nbEnseignants",  userRepository.findAllByRole(Role.ENSEIGNANT).size());
+        model.addAttribute("nbSecretariat",  userRepository.findAllByRole(Role.SECRETARIAT).size());
+        model.addAttribute("nbResponsables", userRepository.findAllByRole(Role.RESPONSABLE).size());
         model.addAttribute("users", userRepository.findAll());
         return "admin/accueil";
     }
@@ -63,14 +64,27 @@ public class AdminController {
     public String resetPassword(@PathVariable Long id) {
         userRepository.findById(id).ifPresent(u -> {
             String defaultPwd = switch (u.getRole()) {
-                case ENSEIGNANT  -> "teacher123";
-                case SECRETARIAT -> "secretary123";
-                case ADMIN       -> "admin123";
-                default          -> "password123";
+                case ENSEIGNANT   -> "teacher123";
+                case SECRETARIAT  -> "secretary123";
+                case ADMIN        -> "admin123";
+                case RESPONSABLE  -> "responsable123";
+                default           -> "password123";
             };
             u.setPassword(passwordEncoder.encode(defaultPwd));
             userRepository.save(u);
         });
+        return "redirect:/admin/accueil";
+    }
+
+    @PostMapping("/admin/users/create-responsable")
+    public String createResponsable(@RequestParam String firstname,
+                                     @RequestParam String lastname,
+                                     @RequestParam String email) {
+        if (userRepository.findByEmail(email).isEmpty()) {
+            User u = new User(firstname, lastname, email, Role.RESPONSABLE);
+            u.setPassword(passwordEncoder.encode("responsable123"));
+            userRepository.save(u);
+        }
         return "redirect:/admin/accueil";
     }
 
@@ -81,6 +95,7 @@ public class AdminController {
         addAdminAttrs(ud, model);
         model.addAttribute("promotions",   promotionRepository.findAll());
         model.addAttribute("secretaires",  userRepository.findAllByRole(Role.SECRETARIAT));
+        model.addAttribute("responsables", userRepository.findAllByRole(Role.RESPONSABLE));
         return "admin/affectations";
     }
 
@@ -92,6 +107,19 @@ public class AdminController {
                     ? userRepository.findById(secretaireId).orElse(null)
                     : null;
             promo.setSecretaireResponsable(secretaire);
+            promotionRepository.save(promo);
+        });
+        return "redirect:/admin/affectations";
+    }
+
+    @PostMapping("/admin/affectations/{promoId}/affecter-responsable")
+    public String affecterResponsable(@PathVariable Long promoId,
+                                       @RequestParam(required = false) Long responsableId) {
+        promotionRepository.findById(promoId).ifPresent(promo -> {
+            User responsable = responsableId != null
+                    ? userRepository.findById(responsableId).orElse(null)
+                    : null;
+            promo.setResponsableFormation(responsable);
             promotionRepository.save(promo);
         });
         return "redirect:/admin/affectations";

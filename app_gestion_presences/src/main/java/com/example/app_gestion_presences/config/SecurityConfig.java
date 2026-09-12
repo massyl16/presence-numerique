@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/secretariat/**").hasRole("SECRETARIAT")
                 .requestMatchers("/enseignant/**").hasRole("ENSEIGNANT")
                 .requestMatchers("/etudiant/**").hasRole("ETUDIANT")
+                .requestMatchers("/responsable/**").hasRole("RESPONSABLE")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -45,9 +46,10 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 .successHandler((req, res, auth) -> {
                     String role = auth.getAuthorities().iterator().next().getAuthority();
-                    if (role.contains("ADMIN"))        res.sendRedirect("/admin/accueil");
+                    if (role.contains("ADMIN"))          res.sendRedirect("/admin/accueil");
                     else if (role.contains("SECRETARIAT")) res.sendRedirect("/secretariat/accueil");
                     else if (role.contains("ENSEIGNANT"))  res.sendRedirect("/enseignant/accueil");
+                    else if (role.contains("RESPONSABLE")) res.sendRedirect("/responsable/feuilles");
                     else                                   res.sendRedirect("/etudiant/accueil");
                 })
                 .failureUrl("/login?error")

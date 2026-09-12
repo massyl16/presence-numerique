@@ -17,6 +17,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 public class SecretariatController {
@@ -54,9 +56,21 @@ public class SecretariatController {
 
     @GetMapping("/secretariat/accueil")
     public String accueil(@AuthenticationPrincipal UserDetails ud, Model model) {
-        model.addAttribute("secretariat", getCurrentUser(ud));
-        model.addAttribute("promotions", promotionRepository.findAll());
-        model.addAttribute("nbEtudiants", userRepository.findAllByRole(Role.ETUDIANT).size());
+        User currentUser = getCurrentUser(ud);
+        model.addAttribute("secretariat", currentUser);
+
+        // Scope : formations affectées à ce secrétaire
+        List<Promotion> myPromos = promotionRepository.findAll().stream()
+                .filter(p -> p.getSecretaireResponsable() != null
+                          && p.getSecretaireResponsable().getId().equals(currentUser.getId()))
+                .toList();
+        model.addAttribute("promotions", myPromos);
+
+        long nbEtudiants = myPromos.stream()
+                .flatMap(p -> userRepository.findAllByPromotion(p).stream())
+                .filter(u -> u.getRole() == Role.ETUDIANT)
+                .count();
+        model.addAttribute("nbEtudiants", nbEtudiants);
         model.addAttribute("nbEnseignants", userRepository.findAllByRole(Role.ENSEIGNANT).size());
         return "secretariat/accueil";
     }
@@ -203,17 +217,31 @@ public class SecretariatController {
     public String feuilles(@AuthenticationPrincipal UserDetails ud,
                             @RequestParam(required = false) Long promoId,
                             Model model) {
-        model.addAttribute("secretariat", getCurrentUser(ud));
-        model.addAttribute("promotions", promotionRepository.findAll());
+        User currentUser = getCurrentUser(ud);
+        model.addAttribute("secretariat", currentUser);
+
+        // Scope : uniquement les formations affectées à ce secrétaire
+        List<Promotion> myPromos = promotionRepository.findAll().stream()
+                .filter(p -> p.getSecretaireResponsable() != null
+                          && p.getSecretaireResponsable().getId().equals(currentUser.getId()))
+                .toList();
+        model.addAttribute("promotions", myPromos);
         model.addAttribute("promoId", promoId);
 
         if (promoId != null) {
-            Promotion promo = promotionRepository.findById(promoId).orElse(null);
+            Promotion promo = myPromos.stream()
+                    .filter(p -> p.getId().equals(promoId)).findFirst().orElse(null);
             if (promo != null) {
                 model.addAttribute("promoNom", promo.getName());
                 List<Event> seances = eventRepository
                         .findAllByPromotionAndClosedOrderByStartTimeDesc(promo, true);
                 model.addAttribute("seances", seances);
+
+                // Aperçu inline : attendances par séance (Priorité 3)
+                Map<Long, List<Attendance>> attendancesParSeance = seances.stream()
+                        .collect(Collectors.toMap(Event::getId,
+                                e -> attendanceRepository.findAllByEventId(e.getId())));
+                model.addAttribute("attendancesParSeance", attendancesParSeance);
 
                 // Cumul par étudiant (onglet 2)
                 List<EtudiantStats> etudiantsStats = userRepository.findAllByPromotion(promo)

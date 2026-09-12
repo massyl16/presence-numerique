@@ -83,6 +83,19 @@ public class DataInitializer {
         secretary.setPassword(passwordEncoder.encode("secretary123"));
         userRepository.save(secretary);
 
+        // ── Responsable pédagogique ──────────────────────────────────────────────
+        User responsable = new User("Julie", "Perrot", "jp@test.com", Role.RESPONSABLE);
+        responsable.setPassword(passwordEncoder.encode("responsable123"));
+        userRepository.save(responsable);
+
+        // Affectation secrétaire + responsable → promotions (pour la démo)
+        m1.setSecretaireResponsable(secretary);
+        m2.setSecretaireResponsable(secretary);
+        m1.setResponsableFormation(responsable);
+        m2.setResponsableFormation(responsable);
+        promotionRepository.save(m1);
+        promotionRepository.save(m2);
+
         // ── Séances clôturées pour la démo ────────────────────────────────────
         // Séance 1 — M1 Groupe 1, il y a 5 jours (Algorithmique)
         Event s1 = new Event();

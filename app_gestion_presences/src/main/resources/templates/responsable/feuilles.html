@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Feuilles de présence — Secrétariat</title>
+    <title>Feuilles de présence — Responsable</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <style>
         .tabs { display:flex; gap:0; margin-bottom:0; border-bottom:2px solid #E2E8F0; }
@@ -11,7 +11,7 @@
             background:none; border:none; border-bottom:3px solid transparent;
             cursor:pointer; margin-bottom:-2px; transition:color .15s, border-color .15s;
         }
-        .tab-btn.active { color:#15233F; border-bottom-color:#2ED47A; }
+        .tab-btn.active { color:#15233F; border-bottom-color:#7C3AED; }
         .tab-panel { display:none; }
         .tab-panel.active { display:block; }
         .badge-alert { background:#FEE2E2; color:#C0392B; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
@@ -38,14 +38,10 @@
         <div><div class="name">Présence</div><div class="sub">Numérique</div></div>
     </div>
     <div class="nav-label">Navigation</div>
-    <a class="nav-item" th:href="@{/secretariat/accueil}"><span class="ico">🏠</span> Accueil</a>
-    <a class="nav-item" th:href="@{/secretariat/promotions}"><span class="ico">🎓</span> Promotions</a>
-    <a class="nav-item" th:href="@{/secretariat/etudiants}"><span class="ico">👥</span> Étudiants &amp; groupes</a>
-    <a class="nav-item" th:href="@{/secretariat/enseignants}"><span class="ico">📚</span> Enseignants</a>
-    <a class="nav-item active" th:href="@{/secretariat/feuilles}"><span class="ico">📋</span> Feuilles de présence</a>
+    <a class="nav-item active" th:href="@{/responsable/feuilles}"><span class="ico">📋</span> Feuilles de présence</a>
     <div class="role-badge" style="margin-top:auto">
-        <div class="r" th:text="${secretariat.firstname + ' ' + secretariat.lastname}">Secrétariat</div>
-        <div class="e">SECRÉTARIAT</div>
+        <div class="r" th:text="${responsable.firstname + ' ' + responsable.lastname}">Responsable</div>
+        <div class="e">RESPONSABLE</div>
     </div>
     <a class="nav-item" th:href="@{/compte}" style="margin-top:10px"><span class="ico">👤</span> Mon compte</a>
     <a th:href="@{/logout}" class="nav-item"><span class="ico">🚪</span> Déconnexion</a>
@@ -53,7 +49,10 @@
 
 <div class="main">
     <div class="topbar">
-        <div><h1>Feuilles de présence</h1><p>Consultation par promotion.</p></div>
+        <div>
+            <h1>Feuilles de présence</h1>
+            <p>Consultation en lecture seule — formations dont vous êtes responsable.</p>
+        </div>
     </div>
 
     <!-- Avertissement si aucune formation affectée -->
@@ -66,7 +65,7 @@
     <div class="card" style="max-width:420px;margin-bottom:24px" th:unless="${#lists.isEmpty(promotions)}">
         <div class="form-group" style="margin:0">
             <label class="form-label">Promotion</label>
-            <select class="form-control" onchange="if(this.value) window.location='/secretariat/feuilles?promoId='+this.value">
+            <select class="form-control" onchange="if(this.value) window.location='/responsable/feuilles?promoId='+this.value">
                 <option value="">-- Choisir une promotion --</option>
                 <option th:each="p : ${promotions}"
                         th:value="${p.id}"
@@ -97,7 +96,7 @@
                                 <th>Date / Heure</th>
                                 <th>Groupe</th>
                                 <th>Enseignant</th>
-                                <th>Actions</th>
+                                <th>Aperçu</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -108,17 +107,15 @@
                                 <td th:text="${s.startTime != null ? #temporals.format(s.startTime, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
                                 <td th:text="${s.group != null ? s.group.name : 'Tous'}">—</td>
                                 <td th:text="${s.enseignant.firstname + ' ' + s.enseignant.lastname}">—</td>
-                                <td style="display:flex;gap:10px;align-items:center">
+                                <td>
                                     <button class="voir-btn"
                                             th:data-id="${s.id}"
                                             th:data-date="${s.startTime != null ? #temporals.format(s.startTime, 'dd/MM/yyyy HH:mm') : '—'}"
                                             th:data-groupe="${s.group != null ? s.group.name : 'Tous'}"
                                             th:data-enseignant="${s.enseignant.firstname + ' ' + s.enseignant.lastname}"
-                                            style="font-size:12px;color:#2563EB;font-weight:600;background:none;border:none;cursor:pointer;padding:0">
-                                        👁 Aperçu
+                                            style="font-size:12px;color:#7C3AED;font-weight:600;background:none;border:none;cursor:pointer;padding:0">
+                                        👁 Voir
                                     </button>
-                                    <a th:href="@{/secretariat/feuilles/{id}/csv(id=${s.id})}"
-                                       style="font-size:12px;color:#2ED47A;font-weight:600;text-decoration:none">⬇ Excel</a>
                                 </td>
                             </tr>
                         </tbody>

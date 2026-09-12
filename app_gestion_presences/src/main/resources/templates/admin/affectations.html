@@ -26,12 +26,14 @@
 <div class="main">
     <div class="topbar">
         <div>
-            <h1>Affectations secrétariat</h1>
-            <p>Associez un(e) secrétaire responsable à chaque formation.</p>
+            <h1>Affectations</h1>
+            <p>Associez un secrétaire et un responsable pédagogique à chaque formation.</p>
         </div>
     </div>
 
-    <div class="card">
+    <!-- Section Secrétariat -->
+    <div style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:12px">👩‍💼 Secrétariat</div>
+    <div class="card" style="margin-bottom:28px">
         <div class="table-wrap">
             <table>
                 <thead>
@@ -44,9 +46,7 @@
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(promotions)}">
-                        <td colspan="4" style="text-align:center;color:#67748C;padding:30px">
-                            Aucune formation enregistrée.
-                        </td>
+                        <td colspan="4" style="text-align:center;color:#67748C;padding:30px">Aucune formation enregistrée.</td>
                     </tr>
                     <tr th:each="promo : ${promotions}">
                         <td style="font-weight:600" th:text="${promo.name}">—</td>
@@ -54,10 +54,8 @@
                                 ? promo.secretaireResponsable.firstname + ' ' + promo.secretaireResponsable.lastname
                                 : '—'}">—</td>
                         <td>
-                            <span th:if="${promo.secretaireResponsable != null}"
-                                  class="badge present">Affectée</span>
-                            <span th:unless="${promo.secretaireResponsable != null}"
-                                  class="badge absent">À affecter</span>
+                            <span th:if="${promo.secretaireResponsable != null}" class="badge present">Affectée</span>
+                            <span th:unless="${promo.secretaireResponsable != null}" class="badge absent">À affecter</span>
                         </td>
                         <td>
                             <form th:action="@{/admin/affectations/{id}/affecter(id=${promo.id})}"
@@ -80,8 +78,60 @@
     </div>
 
     <div th:if="${#lists.isEmpty(secretaires)}"
-         style="margin-top:16px;padding:14px 18px;background:#FEF9C3;border-radius:9px;font-size:13px;color:#92400E">
+         style="margin-bottom:20px;padding:14px 18px;background:#FEF9C3;border-radius:9px;font-size:13px;color:#92400E">
         ⚠ Aucun compte secrétariat n'existe encore.
+        Créez-en un depuis l'<a th:href="@{/admin/accueil}" style="color:#92400E;font-weight:600">accueil admin</a>.
+    </div>
+
+    <!-- Section Responsable pédagogique -->
+    <div style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:12px">🎓 Responsable pédagogique</div>
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Formation</th>
+                        <th>Responsable pédagogique</th>
+                        <th>Statut</th>
+                        <th>Modifier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(promotions)}">
+                        <td colspan="4" style="text-align:center;color:#67748C;padding:30px">Aucune formation enregistrée.</td>
+                    </tr>
+                    <tr th:each="promo : ${promotions}">
+                        <td style="font-weight:600" th:text="${promo.name}">—</td>
+                        <td th:text="${promo.responsableFormation != null
+                                ? promo.responsableFormation.firstname + ' ' + promo.responsableFormation.lastname
+                                : '—'}">—</td>
+                        <td>
+                            <span th:if="${promo.responsableFormation != null}" class="badge present">Affecté</span>
+                            <span th:unless="${promo.responsableFormation != null}" class="badge absent">À affecter</span>
+                        </td>
+                        <td>
+                            <form th:action="@{/admin/affectations/{id}/affecter-responsable(id=${promo.id})}"
+                                  method="post" style="display:flex;gap:8px;align-items:center">
+                                <select class="form-control" name="responsableId" style="min-width:180px;font-size:12px;padding:5px 10px">
+                                    <option value="">— Aucun —</option>
+                                    <option th:each="resp : ${responsables}"
+                                            th:value="${resp.id}"
+                                            th:selected="${promo.responsableFormation != null
+                                                          && promo.responsableFormation.id == resp.id}"
+                                            th:text="${resp.firstname + ' ' + resp.lastname}"></option>
+                                </select>
+                                <button type="submit" class="btn" style="font-size:12px;padding:6px 14px">Enregistrer</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(responsables)}"
+         style="margin-top:16px;padding:14px 18px;background:#FEF9C3;border-radius:9px;font-size:13px;color:#92400E">
+        ⚠ Aucun compte responsable pédagogique n'existe encore.
         Créez-en un depuis l'<a th:href="@{/admin/accueil}" style="color:#92400E;font-weight:600">accueil admin</a>.
     </div>
 </div>

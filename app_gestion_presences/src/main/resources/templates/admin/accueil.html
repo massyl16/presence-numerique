@@ -41,6 +41,32 @@
             <div class="val" th:text="${nbSecretariat}">0</div>
             <div class="lbl">Secrétariat</div>
         </div>
+        <div class="stat-card">
+            <div class="val" th:text="${nbResponsables}">0</div>
+            <div class="lbl">Responsables</div>
+        </div>
+    </div>
+
+    <!-- Créer un compte Responsable -->
+    <div class="card" style="max-width:520px;margin-bottom:24px">
+        <div style="font-size:14px;font-weight:700;color:#15233F;margin-bottom:14px">➕ Créer un compte responsable</div>
+        <form th:action="@{/admin/users/create-responsable}" method="post"
+              style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+            <div style="flex:1;min-width:130px">
+                <label class="form-label" style="font-size:12px">Prénom</label>
+                <input class="form-control" type="text" name="firstname" required placeholder="Prénom"/>
+            </div>
+            <div style="flex:1;min-width:130px">
+                <label class="form-label" style="font-size:12px">Nom</label>
+                <input class="form-control" type="text" name="lastname" required placeholder="Nom"/>
+            </div>
+            <div style="flex:2;min-width:180px">
+                <label class="form-label" style="font-size:12px">Email</label>
+                <input class="form-control" type="email" name="email" required placeholder="email@exemple.fr"/>
+            </div>
+            <button type="submit" class="btn" style="font-size:12px;padding:8px 16px;white-space:nowrap">Créer</button>
+        </form>
+        <p style="font-size:11px;color:#67748C;margin:8px 0 0 0">Mot de passe par défaut : <strong>responsable123</strong></p>
     </div>
 
     <!-- Liste de tous les utilisateurs -->
@@ -66,7 +92,8 @@
                         <td>
                             <span th:class="${u.role.name() == 'ADMIN' ? 'badge ouvert' :
                                              (u.role.name() == 'ENSEIGNANT' ? 'badge present' :
-                                             (u.role.name() == 'SECRETARIAT' ? 'badge retard' : 'badge absent'))}"
+                                             (u.role.name() == 'SECRETARIAT' ? 'badge retard' :
+                                             (u.role.name() == 'RESPONSABLE' ? 'badge ouvert' : 'badge absent')))}"
                                   th:text="${u.role.name()}"></span>
                         </td>
                         <td th:text="${u.promotion != null ? u.promotion.name : '—'}">—</td>

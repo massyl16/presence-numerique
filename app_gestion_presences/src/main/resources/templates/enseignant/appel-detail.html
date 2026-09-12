@@ -78,7 +78,7 @@
                  th:id="${'stu-' + att.user.id}"
                  th:class="${'stu ' + (att.status.name() == 'Present' ? 'present' : (att.status.name() == 'Late' ? 'retard' : 'absent'))}">
                 <div class="ph"
-                     th:text="${att.user.firstname.substring(0,1).toUpperCase() + att.user.lastname.substring(0,1).toUpperCase()}">AB</div>
+                     th:text="${(!#strings.isEmpty(att.user.firstname) ? att.user.firstname.substring(0,1).toUpperCase() : '?') + (!#strings.isEmpty(att.user.lastname) ? att.user.lastname.substring(0,1).toUpperCase() : '?')}">AB</div>
                 <div class="nm" th:text="${att.user.firstname + ' ' + att.user.lastname}">Nom</div>
                 <div class="st"
                      th:text="${att.status.name() == 'Present' ? '✓ Présent' : (att.status.name() == 'Late' ? '⏱ Retard' : '— Absent')}"></div>

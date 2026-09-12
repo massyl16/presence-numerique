@@ -111,7 +111,7 @@
         navigator.geolocation.getCurrentPosition(
             pos => {
                 if (pos.coords.accuracy > 300) {
-                    err.textContent = 'Précision GPS insuffisante (' + Math.round(pos.coords.accuracy) + ' m). Déplacez-vous en espace ouvert et réessayez.';
+                    err.textContent = 'Précision GPS insuffisante (' + Math.round(pos.coords.accuracy) + ' m). Rapprochez-vous d\'une fenêtre ou désactivez le Wi-Fi puis réessayez.';
                     btn.disabled = false;
                     return;
                 }
@@ -126,13 +126,22 @@
                         err.textContent = body;
                         btn.disabled = false;
                     }
+                }).catch(() => {
+                    err.textContent = 'Erreur réseau. Vérifiez votre connexion et réessayez.';
+                    btn.disabled = false;
                 });
             },
-            e => {
-                err.textContent = 'Impossible d\'obtenir votre position GPS. Activez la localisation.';
+            gpsErr => {
+                if (gpsErr.code === 1) {
+                    err.textContent = 'Localisation refusée. Autorisez l\'accès à la position dans les paramètres du navigateur.';
+                } else if (gpsErr.code === 3) {
+                    err.textContent = 'Délai GPS dépassé. Restez immobile quelques secondes et réessayez.';
+                } else {
+                    err.textContent = 'Impossible d\'obtenir votre position GPS. Activez la localisation.';
+                }
                 btn.disabled = false;
             },
-            { enableHighAccuracy: false, timeout: 10000 }
+            { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
         );
     }
 </script>

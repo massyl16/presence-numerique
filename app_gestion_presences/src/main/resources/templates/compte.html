@@ -36,6 +36,9 @@
             <a class="nav-item" th:href="@{/admin/affectations}"><span class="ico">🔗</span> Affectations</a>
             <a class="nav-item" th:href="@{/admin/historique}"><span class="ico">📊</span> Historique global</a>
         </th:block>
+        <th:block th:case="'RESPONSABLE'">
+            <a class="nav-item" th:href="@{/responsable/feuilles}"><span class="ico">📋</span> Feuilles de présence</a>
+        </th:block>
     </th:block>
 
     <div class="role-badge" style="margin-top:auto">
