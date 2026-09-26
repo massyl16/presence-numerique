@@ -67,13 +67,13 @@ public class Attendance {
             double distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
             if (distance > 150) {
-                return "Vous êtes trop loin de l'emplacement de l'évênement";
+                return "Vous êtes trop loin de l'emplacement de l'événement";
             }
         }
 
         int threshold = event.getLateThreshold();
         if (validationTime.isBefore(event.getStartTime())) {
-            return "L'évênement a été démarré mais vous devez patienter jusqu'à l'heure de début réel";
+            return "L'événement a été démarré mais vous devez patienter jusqu'à l'heure de début réel";
         } else if (validationTime.isBefore(event.getStartTime().plusMinutes(threshold))) {
             setStatus(AttendanceStatus.Present);
             setLateMinutes(0);

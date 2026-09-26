@@ -30,7 +30,7 @@ public class eventService {
         Event event = new Event(scheduledTime, lateThreshold, latitude, longitude, enseignant, promotion, group);
         eventRepository.save(event);
 
-        if (Objects.equals(group.getName(), "Complet")) {
+        if (group == null || Objects.equals(group.getName(), "Complet")) {
             List<Group> groups = groupRepository.findAllByPromotion(promotion);
             for (Group g : groups) {
                 for (User u : userRepository.findAllByPromotionAndGroup(promotion, g)) {
