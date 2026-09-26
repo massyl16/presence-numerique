@@ -93,7 +93,6 @@ public class EnseignantController {
                               @RequestParam Double latitude,
                               @RequestParam Double longitude,
                               @RequestParam(defaultValue = "15") int lateThreshold,
-                              @RequestParam(required = false) String title,
                               @AuthenticationPrincipal UserDetails ud) {
         User enseignant = getCurrentUser(ud);
         Promotion promotion = promotionRepository.getReferenceById(promotionId);
@@ -104,7 +103,6 @@ public class EnseignantController {
         // Crée la séance
         Event seance = new Event(LocalDateTime.now(), lateThreshold, latitude, longitude,
                 enseignant, promotion, groupe);
-        if (title != null && !title.isBlank()) seance.setTitle(title);
         seance.start(enseignant); // started=true, startTime=now, token généré
         eventRepository.save(seance);
 

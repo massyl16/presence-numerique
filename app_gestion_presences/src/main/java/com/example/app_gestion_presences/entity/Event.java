@@ -11,8 +11,6 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-
     /** Date/heure prévue */
     private LocalDateTime scheduledTime;
 
@@ -37,7 +35,6 @@ public class Event {
     private Group group;
 
     public Long getId() { return id; }
-    public String getTitle() { return title; }
     public LocalDateTime getScheduledTime() { return scheduledTime; }
     public LocalDateTime getStartTime() { return startTime; }
     public Double getLatitude() { return latitude; }
@@ -50,7 +47,6 @@ public class Event {
     public Promotion getPromotion() { return promotion; }
     public Group getGroup() { return group; }
 
-    public void setTitle(String title) { this.title = title; }
     public void setScheduledTime(LocalDateTime scheduledTime) { this.scheduledTime = scheduledTime; }
     public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
     public void setLatitude(Double latitude) { this.latitude = latitude; }

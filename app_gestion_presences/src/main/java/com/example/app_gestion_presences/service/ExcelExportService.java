@@ -45,12 +45,11 @@ public class ExcelExportService {
             Row titleRow = sheet.createRow(row++);
             titleRow.setHeightInPoints(30);
             Cell titleCell = titleRow.createCell(0);
-            String titreSeance = seance.getTitle() != null ? seance.getTitle() : "Séance";
             String promoGroupe = seance.getPromotion().getName()
                     + (seance.getGroup() != null ? " · " + seance.getGroup().getName() : "");
             String dateStr = seance.getStartTime() != null
                     ? seance.getStartTime().format(FMT_DATE) : "—";
-            titleCell.setCellValue("Feuille de présence — " + titreSeance + " | " + promoGroupe + " | " + dateStr);
+            titleCell.setCellValue("Feuille de présence — " + promoGroupe + " | " + dateStr);
             titleCell.setCellStyle(titleStyle);
             sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 6));
 

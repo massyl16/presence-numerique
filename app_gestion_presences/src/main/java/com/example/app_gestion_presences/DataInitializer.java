@@ -99,7 +99,6 @@ public class DataInitializer {
         // ── Séances clôturées pour la démo ────────────────────────────────────
         // Séance 1 — M1 Groupe 1, il y a 5 jours (Algorithmique)
         Event s1 = new Event();
-        s1.setTitle("Algorithmique avancée");
         s1.setEnseignant(charles);
         s1.setPromotion(m1);
         s1.setGroup(m1g1);
@@ -119,7 +118,6 @@ public class DataInitializer {
 
         // Séance 2 — M1 Groupe 2, il y a 5 jours (BDD)
         Event s2 = new Event();
-        s2.setTitle("Bases de données relationnelles");
         s2.setEnseignant(charles);
         s2.setPromotion(m1);
         s2.setGroup(m1g2);
@@ -138,7 +136,6 @@ public class DataInitializer {
 
         // Séance 3 — M2 Groupe 1, il y a 3 jours (Architecture)
         Event s3 = new Event();
-        s3.setTitle("Architecture logicielle");
         s3.setEnseignant(sophie);
         s3.setPromotion(m2);
         s3.setGroup(m2g1);
@@ -157,7 +154,6 @@ public class DataInitializer {
 
         // Séance 4 — M2 Groupe 2, hier (DevOps)
         Event s4 = new Event();
-        s4.setTitle("DevOps & CI/CD");
         s4.setEnseignant(sophie);
         s4.setPromotion(m2);
         s4.setGroup(m2g2);
