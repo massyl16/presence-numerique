@@ -180,14 +180,18 @@ public class DataInitializer {
      * recrée les comptes de démo manquants et les rattache aux promos de démo si elles n'ont personne.
      */
     private void repairDemoAffectations() {
-        User secretary   = findOrCreate("Anna",  "Bernard", "ab@test.com", Role.SECRETARIAT, "secretary123");
-        User responsable = findOrCreate("Julie", "Perrot",  "jp@test.com", Role.RESPONSABLE, "responsable123");
-        for (String name : List.of("M1 MIAGE", "M2 MIAGE")) {
-            Promotion promo = promotionRepository.findByName(name);
-            if (promo == null) continue;
-            if (promo.getSecretaireResponsable() == null) promo.setSecretaireResponsable(secretary);
-            if (promo.getResponsableFormation() == null) promo.setResponsableFormation(responsable);
-            promotionRepository.save(promo);
+        // Ne doit jamais empêcher l'application de démarrer
+        try {
+            User secretary   = findOrCreate("Anna",  "Bernard", "ab@test.com", Role.SECRETARIAT, "secretary123");
+            User responsable = findOrCreate("Julie", "Perrot",  "jp@test.com", Role.RESPONSABLE, "responsable123");
+            for (Promotion promo : promotionRepository.findAll()) {
+                if (!List.of("M1 MIAGE", "M2 MIAGE").contains(promo.getName())) continue;
+                if (promo.getSecretaireResponsable() == null) promo.setSecretaireResponsable(secretary);
+                if (promo.getResponsableFormation() == null) promo.setResponsableFormation(responsable);
+                promotionRepository.save(promo);
+            }
+        } catch (Exception e) {
+            System.err.println("[DataInitializer] Réparation des affectations de démo ignorée : " + e);
         }
     }
 
