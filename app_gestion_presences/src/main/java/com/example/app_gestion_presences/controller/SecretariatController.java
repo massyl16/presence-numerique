@@ -6,6 +6,8 @@ import com.example.app_gestion_presences.service.ExcelExportService;
 import com.example.app_gestion_presences.service.promotionService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
@@ -54,6 +57,18 @@ public class SecretariatController {
         return userRepository.findByEmail(ud.getUsername()).orElseThrow();
     }
 
+    /** Scope : la séance doit appartenir à une formation affectée à ce secrétaire. */
+    private Event getSeanceInScope(Long seanceId, User currentUser) {
+        Event seance = eventRepository.findById(seanceId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        User secretaire = seance.getPromotion() != null
+                ? seance.getPromotion().getSecretaireResponsable() : null;
+        if (secretaire == null || !secretaire.getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Séance hors de vos formations");
+        }
+        return seance;
+    }
+
     @GetMapping("/secretariat/accueil")
     public String accueil(@AuthenticationPrincipal UserDetails ud, Model model) {
         User currentUser = getCurrentUser(ud);
@@ -87,9 +102,10 @@ public class SecretariatController {
     }
 
     @PostMapping("/secretariat/promotions/create")
-    public String createPromotion(@RequestParam String name) {
+    public String createPromotion(@RequestParam String name,
+                                   @AuthenticationPrincipal UserDetails ud) {
         if (promotionService.getAllPromotions().stream().noneMatch(p -> p.getName().equals(name))) {
-            promotionService.createPromotion(name);
+            promotionService.createPromotion(name, getCurrentUser(ud));
         }
         return "redirect:/secretariat/promotions";
     }
@@ -109,8 +125,14 @@ public class SecretariatController {
     }
 
     @PostMapping("/secretariat/groupes/{id}/delete")
-    public String deleteGroupe(@PathVariable Long id) {
-        groupRepository.deleteById(id);
+    public String deleteGroupe(@PathVariable Long id, RedirectAttributes ra) {
+        Group group = groupRepository.findById(id).orElseThrow();
+        if (userRepository.existsByGroup(group) || eventRepository.existsByGroup(group)) {
+            ra.addFlashAttribute("deleteError", "Impossible de supprimer le groupe « " + group.getName()
+                    + " » : il contient des étudiants ou des séances.");
+            return "redirect:/secretariat/promotions";
+        }
+        groupRepository.delete(group);
         return "redirect:/secretariat/promotions";
     }
 
@@ -206,8 +228,14 @@ public class SecretariatController {
     }
 
     @PostMapping("/secretariat/enseignants/{id}/delete")
-    public String deleteEnseignant(@PathVariable Long id) {
-        userRepository.deleteById(id);
+    public String deleteEnseignant(@PathVariable Long id, RedirectAttributes ra) {
+        User enseignant = userRepository.findById(id).orElseThrow();
+        if (eventRepository.existsByEnseignant(enseignant)) {
+            ra.addFlashAttribute("deleteError", "Impossible de supprimer " + enseignant.getFirstname() + " "
+                    + enseignant.getLastname() + " : cet enseignant a déjà des séances enregistrées.");
+            return "redirect:/secretariat/enseignants";
+        }
+        userRepository.delete(enseignant);
         return "redirect:/secretariat/enseignants";
     }
 
@@ -270,8 +298,9 @@ public class SecretariatController {
     @GetMapping("/secretariat/feuilles/{seanceId}")
     public String feuilleDetail(@PathVariable Long seanceId,
                                  @AuthenticationPrincipal UserDetails ud, Model model) {
-        model.addAttribute("secretariat", getCurrentUser(ud));
-        Event seance = eventRepository.findById(seanceId).orElseThrow();
+        User currentUser = getCurrentUser(ud);
+        model.addAttribute("secretariat", currentUser);
+        Event seance = getSeanceInScope(seanceId, currentUser);
         List<Attendance> attendances = attendanceRepository.findAllByEventId(seanceId);
 
         long nbPresent = attendances.stream().filter(a -> a.getStatus() == AttendanceStatus.Present).count();
@@ -292,8 +321,9 @@ public class SecretariatController {
 
     @GetMapping("/secretariat/feuilles/{seanceId}/csv")
     public void exportExcel(@PathVariable Long seanceId,
+                             @AuthenticationPrincipal UserDetails ud,
                              HttpServletResponse response) throws IOException {
-        Event seance = eventRepository.findById(seanceId).orElseThrow();
+        Event seance = getSeanceInScope(seanceId, getCurrentUser(ud));
         List<Attendance> attendances = attendanceRepository.findAllByEventId(seanceId);
         excelExportService.exportPresences(seance, attendances, response);
     }

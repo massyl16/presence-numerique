@@ -1,6 +1,7 @@
 package com.example.app_gestion_presences.repository;
 
 import com.example.app_gestion_presences.entity.Event;
+import com.example.app_gestion_presences.entity.Group;
 import com.example.app_gestion_presences.entity.Promotion;
 import com.example.app_gestion_presences.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,10 @@ import java.util.Optional;
 public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findAllByEnseignant(User enseignant);
     List<Event> findAllByPromotion(Promotion promotion);
+
+    boolean existsByEnseignant(User enseignant);
+
+    boolean existsByGroup(Group group);
 
     /** Séance active pour une promotion (commencée, non clôturée) */
     @Query("SELECT e FROM Event e WHERE e.promotion = :promo AND e.started = true AND e.closed = false")

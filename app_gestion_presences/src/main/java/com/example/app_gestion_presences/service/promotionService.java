@@ -1,6 +1,7 @@
 package com.example.app_gestion_presences.service;
 
 import com.example.app_gestion_presences.entity.Promotion;
+import com.example.app_gestion_presences.entity.User;
 import com.example.app_gestion_presences.repository.PromotionRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,10 @@ public class promotionService {
         this.promotionRepository = promotionRepository;
     }
 
-    public void createPromotion(String name) {
-        promotionRepository.save(new Promotion(name));
+    public void createPromotion(String name, User secretaire) {
+        Promotion promotion = new Promotion(name);
+        promotion.setSecretaireResponsable(secretaire);
+        promotionRepository.save(promotion);
     }
 
     public List<Promotion> getAllPromotions() {

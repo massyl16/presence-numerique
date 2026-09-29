@@ -13,4 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByPromotionAndGroup(Promotion promotion, Group group);
     List<User> findByEmailAndPromotion(String email, Promotion promotion);
     Optional<User> findByEmail(String email);
+
+    boolean existsByGroup(Group group);
 }
