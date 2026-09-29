@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class DataInitializer {
@@ -37,7 +38,10 @@ public class DataInitializer {
             admin.setPassword(passwordEncoder.encode("admin123"));
             userRepository.save(admin);
         }
-        if (promotionRepository.count() > 0) return;
+        if (promotionRepository.count() > 0) {
+            repairDemoAffectations();
+            return;
+        }
 
         // ── Promotions et groupes ──────────────────────────────────────────────
         Promotion m1 = promotionRepository.save(new Promotion("M1 MIAGE"));
@@ -169,6 +173,30 @@ public class DataInitializer {
         saveAttendance(s4, julien,   AttendanceStatus.Late,    s4.getStartTime().plusMinutes(9),  4);
         saveAttendance(s4, karine,   AttendanceStatus.Present, s4.getStartTime().plusMinutes(3),  0);
         saveAttendance(s4, leo,      AttendanceStatus.Present, s4.getStartTime().plusMinutes(4),  0);
+    }
+
+    /**
+     * Base déjà initialisée (ex : Railway) avant l'ajout du secrétariat / responsable :
+     * recrée les comptes de démo manquants et les rattache aux promos de démo si elles n'ont personne.
+     */
+    private void repairDemoAffectations() {
+        User secretary   = findOrCreate("Anna",  "Bernard", "ab@test.com", Role.SECRETARIAT, "secretary123");
+        User responsable = findOrCreate("Julie", "Perrot",  "jp@test.com", Role.RESPONSABLE, "responsable123");
+        for (String name : List.of("M1 MIAGE", "M2 MIAGE")) {
+            Promotion promo = promotionRepository.findByName(name);
+            if (promo == null) continue;
+            if (promo.getSecretaireResponsable() == null) promo.setSecretaireResponsable(secretary);
+            if (promo.getResponsableFormation() == null) promo.setResponsableFormation(responsable);
+            promotionRepository.save(promo);
+        }
+    }
+
+    private User findOrCreate(String firstname, String lastname, String email, Role role, String password) {
+        return userRepository.findByEmail(email).orElseGet(() -> {
+            User u = new User(firstname, lastname, email, role);
+            u.setPassword(passwordEncoder.encode(password));
+            return userRepository.save(u);
+        });
     }
 
     private User saveStudent(String firstname, String lastname, String email,
