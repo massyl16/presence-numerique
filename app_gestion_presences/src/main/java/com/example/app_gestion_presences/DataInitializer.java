@@ -4,11 +4,14 @@ import com.example.app_gestion_presences.entity.*;
 import com.example.app_gestion_presences.repository.*;
 import com.example.app_gestion_presences.entity.AttendanceStatus;
 import jakarta.annotation.PostConstruct;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class DataInitializer {
@@ -19,20 +22,24 @@ public class DataInitializer {
     private final PromotionRepository promotionRepository;
     private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
 
     public DataInitializer(UserRepository userRepository, EventRepository eventRepository,
                            AttendanceRepository attendanceRepository, PromotionRepository promotionRepository,
-                           GroupRepository groupRepository, PasswordEncoder passwordEncoder) {
+                           GroupRepository groupRepository, PasswordEncoder passwordEncoder,
+                           JdbcTemplate jdbcTemplate) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
         this.attendanceRepository = attendanceRepository;
         this.promotionRepository = promotionRepository;
         this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @PostConstruct
     public void init() {
+        syncRoleConstraint();
         if (userRepository.findByEmail("admin@test.com").isEmpty()) {
             User admin = new User("Admin", "Système", "admin@test.com", Role.ADMIN);
             admin.setPassword(passwordEncoder.encode("admin123"));
@@ -179,6 +186,23 @@ public class DataInitializer {
      * Base déjà initialisée (ex : Railway) avant l'ajout du secrétariat / responsable :
      * recrée les comptes de démo manquants et les rattache aux promos de démo si elles n'ont personne.
      */
+    /**
+     * Hibernate fige la liste des rôles dans la contrainte CHECK users_role_check à la création
+     * de la table, et ddl-auto=update ne la met jamais à jour : une base créée avant l'ajout de
+     * RESPONSABLE refuse donc ces comptes. On recrée la contrainte avec l'enum Role actuel.
+     */
+    private void syncRoleConstraint() {
+        String roles = Arrays.stream(Role.values())
+                .map(r -> "'" + r.name() + "'")
+                .collect(Collectors.joining(", "));
+        try {
+            jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
+            jdbcTemplate.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN (" + roles + "))");
+        } catch (Exception e) {
+            System.err.println("[DataInitializer] Mise à jour de users_role_check ignorée : " + e);
+        }
+    }
+
     private void repairDemoAffectations() {
         // Ne doit jamais empêcher l'application de démarrer
         try {
