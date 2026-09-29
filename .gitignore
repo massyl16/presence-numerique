@@ -13,3 +13,6 @@ app_gestion_presences/target/
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
