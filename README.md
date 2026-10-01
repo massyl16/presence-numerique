@@ -47,6 +47,24 @@ Adaptez les identifiants si votre PostgreSQL local est différent.
 
 ## Lancement
 
+### Avec le script d'exécution (le plus simple)
+
+À la racine du dépôt :
+
+```bash
+# Windows : double-cliquer sur lancer.bat, ou
+lancer.bat            # compile puis lance l'application
+lancer.bat test       # lance les tests unitaires
+
+# Linux / macOS
+./lancer.sh
+./lancer.sh test
+```
+
+Le script vérifie que Java 17+ est installé, compile le projet avec le Maven Wrapper (pas besoin d'installer Maven) puis démarre l'application et affiche les comptes de démonstration.
+
+### Avec Maven directement
+
 ```bash
 cd app_gestion_presences
 
@@ -59,7 +77,7 @@ cd app_gestion_presences
 
 Au premier démarrage, Hibernate crée les tables automatiquement et le `DataInitializer` injecte les données de démonstration.
 
-Accès : **http://localhost:8082**
+Accès : **http://localhost:8080**
 
 ---
 
