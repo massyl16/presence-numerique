@@ -11,6 +11,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 
 @Controller
 public class SecretariatController {
+
+    private static final Logger log = LoggerFactory.getLogger(SecretariatController.class);
 
     private final UserRepository userRepository;
     private final PromotionRepository promotionRepository;
@@ -106,6 +110,7 @@ public class SecretariatController {
                                    @AuthenticationPrincipal UserDetails ud) {
         if (promotionService.getAllPromotions().stream().noneMatch(p -> p.getName().equals(name))) {
             promotionService.createPromotion(name, getCurrentUser(ud));
+            log.info("PROMOTION_CREEE nom=\"{}\" par={}", name, ud.getUsername());
         }
         return "redirect:/secretariat/promotions";
     }
@@ -120,6 +125,7 @@ public class SecretariatController {
                 .stream().anyMatch(g -> g.getName().equals(name));
         if (!exists) {
             groupRepository.save(new Group(name, promotion));
+            log.info("GROUPE_CREE nom=\"{}\" promotion={}", name, promotionId);
         }
         return "redirect:/secretariat/promotions";
     }
@@ -128,11 +134,13 @@ public class SecretariatController {
     public String deleteGroupe(@PathVariable Long id, RedirectAttributes ra) {
         Group group = groupRepository.findById(id).orElseThrow();
         if (userRepository.existsByGroup(group) || eventRepository.existsByGroup(group)) {
+            log.info("SUPPRESSION_REFUSEE groupe={} motif=\"etudiants ou seances lies\"", id);
             ra.addFlashAttribute("deleteError", "Impossible de supprimer le groupe « " + group.getName()
                     + " » : il contient des étudiants ou des séances.");
             return "redirect:/secretariat/promotions";
         }
         groupRepository.delete(group);
+        log.info("GROUPE_SUPPRIME id={} nom=\"{}\"", id, group.getName());
         return "redirect:/secretariat/promotions";
     }
 
@@ -165,7 +173,9 @@ public class SecretariatController {
                 }
             }
             ra.addFlashAttribute("importSuccess", created + " groupe(s) importé(s) avec succès.");
+            log.info("IMPORT_GROUPES promotion={} crees={}", promotionId, created);
         } catch (Exception e) {
+            log.warn("IMPORT_GROUPES_ECHEC promotion={} erreur=\"{}\"", promotionId, e.getMessage());
             ra.addFlashAttribute("importError", "Erreur lors de l'import : " + e.getMessage());
         }
         return "redirect:/secretariat/etudiants";
@@ -194,6 +204,7 @@ public class SecretariatController {
             User u = new User(firstname, lastname, email, promotion, group);
             u.setPassword(passwordEncoder.encode("password123"));
             userRepository.save(u);
+            log.info("ETUDIANT_CREE email={}", email);
         }
         return "redirect:/secretariat/etudiants";
     }
@@ -203,6 +214,7 @@ public class SecretariatController {
         attendanceRepository.deleteAll(attendanceRepository.findAllByUser(
                 userRepository.findById(id).orElseThrow()));
         userRepository.deleteById(id);
+        log.info("ETUDIANT_SUPPRIME id={}", id);
         return "redirect:/secretariat/etudiants";
     }
 
@@ -223,6 +235,7 @@ public class SecretariatController {
             User u = new User(firstname, lastname, email, Role.ENSEIGNANT);
             u.setPassword(passwordEncoder.encode("teacher123"));
             userRepository.save(u);
+            log.info("ENSEIGNANT_CREE email={}", email);
         }
         return "redirect:/secretariat/enseignants";
     }
@@ -231,11 +244,13 @@ public class SecretariatController {
     public String deleteEnseignant(@PathVariable Long id, RedirectAttributes ra) {
         User enseignant = userRepository.findById(id).orElseThrow();
         if (eventRepository.existsByEnseignant(enseignant)) {
+            log.info("SUPPRESSION_REFUSEE enseignant={} motif=\"seances existantes\"", enseignant.getEmail());
             ra.addFlashAttribute("deleteError", "Impossible de supprimer " + enseignant.getFirstname() + " "
                     + enseignant.getLastname() + " : cet enseignant a déjà des séances enregistrées.");
             return "redirect:/secretariat/enseignants";
         }
         userRepository.delete(enseignant);
+        log.info("ENSEIGNANT_SUPPRIME email={}", enseignant.getEmail());
         return "redirect:/secretariat/enseignants";
     }
 

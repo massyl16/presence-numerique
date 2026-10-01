@@ -6,6 +6,8 @@ import com.example.app_gestion_presences.entity.AttendanceStatus;
 import jakarta.annotation.PostConstruct;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -15,6 +17,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class DataInitializer {
+
+    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
@@ -199,7 +203,7 @@ public class DataInitializer {
             jdbcTemplate.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check");
             jdbcTemplate.execute("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN (" + roles + "))");
         } catch (Exception e) {
-            System.err.println("[DataInitializer] Mise à jour de users_role_check ignorée : " + e);
+            log.warn("Mise à jour de users_role_check ignorée : {}", e.toString());
         }
     }
 
@@ -215,7 +219,7 @@ public class DataInitializer {
                 promotionRepository.save(promo);
             }
         } catch (Exception e) {
-            System.err.println("[DataInitializer] Réparation des affectations de démo ignorée : " + e);
+            log.warn("Réparation des affectations de démo ignorée : {}", e.toString());
         }
     }
 

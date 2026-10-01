@@ -38,7 +38,7 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/attendance
 spring.datasource.username=admin
 spring.datasource.password=admin
 spring.jpa.hibernate.ddl-auto=update
-server.port=8082
+server.port=8080
 ```
 
 Adaptez les identifiants si votre PostgreSQL local est différent.
@@ -114,7 +114,7 @@ Accès : **http://localhost:8080**
 
 ### Enseignant
 
-1. Connexion sur `http://localhost:8082` → `cd@test.com / teacher123`
+1. Connexion sur `http://localhost:8080` → `cd@test.com / teacher123`
 2. **Faire l'appel** → sélectionner promotion, groupe, seuil de retard, titre
 3. **Démarrer** → le navigateur demande la géolocalisation
 4. Le trombinoscope s'affiche — les statuts se mettent à jour en temps réel (WebSocket)
@@ -153,7 +153,7 @@ cd app_gestion_presences
 docker compose up --build
 ```
 
-Accès : **http://localhost:8082**
+Accès : **http://localhost:8080**
 
 > Le service `app` attend que PostgreSQL soit prêt (healthcheck) avant de démarrer.
 

@@ -6,6 +6,8 @@ import com.example.app_gestion_presences.service.AttendancePushService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,8 @@ import java.util.Optional;
 
 @Controller
 public class EtudiantController {
+
+    private static final Logger log = LoggerFactory.getLogger(EtudiantController.class);
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
@@ -71,13 +75,13 @@ public class EtudiantController {
         User etudiant = getCurrentUser(ud);
 
         if (etudiant.getPromotion() == null) {
-            return ResponseEntity.status(400).body("Vous n'êtes rattaché à aucune promotion.");
+            return refus(etudiant, "Vous n'êtes rattaché à aucune promotion.");
         }
 
         // Trouve la séance active pour la promotion de l'étudiant
         Optional<Event> seanceOpt = eventRepository.findActiveByPromotion(etudiant.getPromotion());
         if (seanceOpt.isEmpty()) {
-            return ResponseEntity.status(400).body("Aucun appel en cours pour votre promotion.");
+            return refus(etudiant, "Aucun appel en cours pour votre promotion.");
         }
         Event seance = seanceOpt.get();
 
@@ -85,20 +89,20 @@ public class EtudiantController {
         if (seance.getGroup() != null
                 && !seance.getGroup().getName().equals("Complet")
                 && !seance.getGroup().getId().equals(etudiant.getGroup() != null ? etudiant.getGroup().getId() : -1L)) {
-            return ResponseEntity.status(400).body("Cet appel ne concerne pas votre groupe.");
+            return refus(etudiant, "Cet appel ne concerne pas votre groupe.");
         }
 
         // Trouve l'enregistrement de présence pour cet étudiant (créé à l'ouverture de la séance)
         Optional<Attendance> attOpt = attendanceRepository.findByUserAndEvent(etudiant, seance);
         if (attOpt.isEmpty()) {
-            return ResponseEntity.status(400).body("Aucune feuille de présence trouvée pour cette séance.");
+            return refus(etudiant, "Aucune feuille de présence trouvée pour cette séance.");
         }
         Attendance attendance = attOpt.get();
 
         // Anti-doublon : déjà validé
         if (attendance.getStatus() == AttendanceStatus.Present
                 || attendance.getStatus() == AttendanceStatus.Late) {
-            return ResponseEntity.status(400).body("Votre présence est déjà enregistrée.");
+            return refus(etudiant, "Votre présence est déjà enregistrée.");
         }
 
         // Validation Haversine + calcul retard
@@ -108,9 +112,17 @@ public class EtudiantController {
 
         if (!result.equals("Ok")) {
             pushService.sendUpdateResponse(attendance, result);
-            return ResponseEntity.status(400).body(result);
+            return refus(etudiant, result);
         }
+        log.info("CHECKIN_OK seance={} etudiant={} statut={} retard={}min",
+                seance.getId(), etudiant.getEmail(), attendance.getStatus(), attendance.getLateMinutes());
         return ResponseEntity.ok("Ok");
+    }
+
+    /** Journalise le refus (jamais les coordonnées GPS — RGPD) et renvoie le motif à l'étudiant. */
+    private ResponseEntity<String> refus(User etudiant, String motif) {
+        log.info("CHECKIN_REFUSE etudiant={} motif=\"{}\"", etudiant.getEmail(), motif);
+        return ResponseEntity.status(400).body(motif);
     }
 
     // ── Historique des présences ───────────────────────────────────────────────

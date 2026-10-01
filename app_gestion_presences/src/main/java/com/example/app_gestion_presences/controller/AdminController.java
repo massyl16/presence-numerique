@@ -5,6 +5,8 @@ import com.example.app_gestion_presences.repository.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,8 @@ import java.util.List;
 
 @Controller
 public class AdminController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     private final UserRepository userRepository;
     private final PromotionRepository promotionRepository;
@@ -55,6 +59,7 @@ public class AdminController {
         userRepository.findById(id).ifPresent(u -> {
             if (!u.getEmail().equals(ud.getUsername())) {
                 userRepository.delete(u);
+                log.info("UTILISATEUR_SUPPRIME email={} role={} par={}", u.getEmail(), u.getRole(), ud.getUsername());
             }
         });
         return "redirect:/admin/accueil";
@@ -72,6 +77,7 @@ public class AdminController {
             };
             u.setPassword(passwordEncoder.encode(defaultPwd));
             userRepository.save(u);
+            log.info("MOT_DE_PASSE_REINITIALISE email={}", u.getEmail());
         });
         return "redirect:/admin/accueil";
     }
@@ -84,6 +90,7 @@ public class AdminController {
             User u = new User(firstname, lastname, email, Role.RESPONSABLE);
             u.setPassword(passwordEncoder.encode("responsable123"));
             userRepository.save(u);
+            log.info("RESPONSABLE_CREE email={}", email);
         }
         return "redirect:/admin/accueil";
     }

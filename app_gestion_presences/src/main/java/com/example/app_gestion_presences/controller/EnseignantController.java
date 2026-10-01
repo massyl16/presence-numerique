@@ -8,6 +8,8 @@ import com.example.app_gestion_presences.service.attendanceService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,8 @@ import java.util.List;
 
 @Controller
 public class EnseignantController {
+
+    private static final Logger log = LoggerFactory.getLogger(EnseignantController.class);
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
@@ -124,6 +128,9 @@ public class EnseignantController {
 
         // Notifie les étudiants de la promotion via WebSocket
         pushService.sendAppelStart(seance);
+        log.info("APPEL_DEMARRE seance={} promotion=\"{}\" groupe=\"{}\" enseignant={} etudiants={} seuilRetard={}min",
+                seance.getId(), promotion.getName(), groupe != null ? groupe.getName() : "Tous",
+                enseignant.getEmail(), etudiants.size(), lateThreshold);
 
         return "redirect:/enseignant/appel/" + seance.getId();
     }
@@ -164,6 +171,7 @@ public class EnseignantController {
         eventRepository.save(seance);
         pushService.sendUpdateClosed(seance);
         pushService.sendAppelClose(seance);
+        log.info("APPEL_CLOTURE seance={} enseignant={}", seance.getId(), enseignant.getEmail());
         return "redirect:/enseignant/accueil";
     }
 

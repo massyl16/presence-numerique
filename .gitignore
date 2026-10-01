@@ -16,3 +16,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Journaux applicatifs
+logs/
